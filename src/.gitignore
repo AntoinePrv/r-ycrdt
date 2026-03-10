@@ -1,5 +1,14 @@
+# Binaries
 *.o
 *.so
 *.dll
-target
+
+# Cargo files
+target/
+debug/
 .cargo
+
+# extendr
+rust/vendor
+Makevars
+Makevars.win

@@ -15,13 +15,18 @@ sccache = ">=0.8.1"
 c-compiler = ">=1.7.0,<2"
 rust = ">=1.85.0"
 # R library and headers needed at compile time
-r = "*"
+r-base = "*"
 # R tools needed to generate NAMESPACE
 r-roxygen2 = "*"
 
 [feature.build.activation.env]
 RUSTC_WRAPPER = "sccache"
+
+[feature.build.target.osx.activation.env]
 RUSTFLAGS = "-C link-arg=-rpath -C link-arg=$CONDA_PREFIX/lib/"
+
+[feature.build.target.linux.activation.env]
+RUSTFLAGS = "-C link-arg=-Wl,-rpath,$CONDA_PREFIX/lib/R/lib"
 
 [feature.build.tasks.build-lib]
 description = "Compile Rust code into a library"

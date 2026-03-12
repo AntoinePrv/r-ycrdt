@@ -5,6 +5,44 @@
 #' @useDynLib yar, .registration = TRUE
 NULL
 
+Doc <- new.env(parent = emptyenv())
+
+Doc$new <- function() .Call(wrap__Doc__new)
+
+Doc$client_id <- function() .Call(wrap__Doc__client_id, self)
+
+Doc$guid <- function() .Call(wrap__Doc__guid, self)
+
+Doc$get_or_insert_text <- function(name) .Call(wrap__Doc__get_or_insert_text, self, name)
+
+#' @export
+`$.Doc` <- function (self, name) { func <- Doc[[name]]; environment(func) <- environment(); func }
+
+#' @export
+`[[.Doc` <- `$.Doc`
+
+StateVector <- new.env(parent = emptyenv())
+
+StateVector$decode_v1 <- function(data) .Call(wrap__StateVector__decode_v1, data)
+
+StateVector$decode_v2 <- function(data) .Call(wrap__StateVector__decode_v2, data)
+
+StateVector$is_empty <- function() .Call(wrap__StateVector__is_empty, self)
+
+StateVector$len <- function() .Call(wrap__StateVector__len, self)
+
+StateVector$contains_client <- function(client_id) .Call(wrap__StateVector__contains_client, self, client_id)
+
+StateVector$encode_v1 <- function() .Call(wrap__StateVector__encode_v1, self)
+
+StateVector$encode_v2 <- function() .Call(wrap__StateVector__encode_v2, self)
+
+#' @export
+`$.StateVector` <- function (self, name) { func <- StateVector[[name]]; environment(func) <- environment(); func }
+
+#' @export
+`[[.StateVector` <- `$.StateVector`
+
 Transaction <- new.env(parent = emptyenv())
 
 Transaction$new <- function(doc, mutable = FALSE) .Call(wrap__Transaction__new, doc, mutable)
@@ -12,6 +50,12 @@ Transaction$new <- function(doc, mutable = FALSE) .Call(wrap__Transaction__new, 
 Transaction$commit <- function() .Call(wrap__Transaction__commit, self)
 
 Transaction$drop <- function() .Call(wrap__Transaction__drop, self)
+
+Transaction$state_vector <- function() .Call(wrap__Transaction__state_vector, self)
+
+Transaction$encode_diff_v1 <- function(state_vector) .Call(wrap__Transaction__encode_diff_v1, self, state_vector)
+
+Transaction$encode_diff_v2 <- function(state_vector) .Call(wrap__Transaction__encode_diff_v2, self, state_vector)
 
 #' @export
 `$.Transaction` <- function (self, name) { func <- Transaction[[name]]; environment(func) <- environment(); func }
@@ -30,21 +74,5 @@ TextRef$get_string <- function(transaction) .Call(wrap__TextRef__get_string, sel
 
 #' @export
 `[[.TextRef` <- `$.TextRef`
-
-Doc <- new.env(parent = emptyenv())
-
-Doc$new <- function() .Call(wrap__Doc__new)
-
-Doc$client_id <- function() .Call(wrap__Doc__client_id, self)
-
-Doc$guid <- function() .Call(wrap__Doc__guid, self)
-
-Doc$get_or_insert_text <- function(name) .Call(wrap__Doc__get_or_insert_text, self, name)
-
-#' @export
-`$.Doc` <- function (self, name) { func <- Doc[[name]]; environment(func) <- environment(); func }
-
-#' @export
-`[[.Doc` <- `$.Doc`
 
 # nolint end

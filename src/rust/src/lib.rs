@@ -1,5 +1,6 @@
 use extendr_api::prelude::*;
-use yrs::{GetString as YGetString, Text as YText, Transact as YTransact};
+use yrs::updates::{decoder::Decode as YDecode, encoder::Encode as YEncode};
+use yrs::{GetString as YGetString, ReadTxn as YReadTxn, Text as YText, Transact as YTransact};
 
 // Perhaps we could have two different bindings of Transaction and TransactionMut
 // with the same API and use a macro to bind YTransact trait methods.
@@ -19,6 +20,24 @@ struct Transaction {
     owner: Robj,
 }
 
+impl Transaction {
+    fn try_dyn_transaction(&self) -> Result<&DynTransaction<'static>, Error> {
+        match &self.transaction {
+            Some(trans) => Ok(trans),
+            None => Err(Error::Other("Transaction was dropped".into())),
+        }
+    }
+
+    fn try_transaction_mut(&mut self) -> Result<&mut yrs::TransactionMut<'static>, Error> {
+        use DynTransaction::{Read, Write};
+        match &mut self.transaction {
+            Some(Write(trans)) => Ok(trans),
+            Some(Read(_)) => Err(Error::Other("Transaction is readonly".into())),
+            None => Err(Error::Other("Transaction was dropped".into())),
+        }
+    }
+}
+
 #[extendr]
 impl Transaction {
     fn new(doc: ExternalPtr<Doc>, #[extendr(default = "FALSE")] mutable: bool) -> Self {
@@ -35,19 +54,36 @@ impl Transaction {
     }
 
     fn commit(&mut self) -> Result<(), Error> {
-        use DynTransaction::{Read, Write};
-        match &mut self.transaction {
-            Some(Write(trans)) => {
-                trans.commit();
-                Ok(())
-            }
-            Some(Read(_)) => Err(Error::Other("Transaction is readonly".into())),
-            None => Err(Error::Other("Transaction was dropped".into())),
-        }
+        self.try_transaction_mut()?.commit();
+        Ok(())
     }
 
     fn drop(&mut self) {
         self.transaction = None;
+    }
+
+    fn state_vector(&self) -> Result<StateVector, Error> {
+        use DynTransaction::{Read, Write};
+        match &self.try_dyn_transaction()? {
+            Write(trans) => Ok(StateVector(trans.state_vector())),
+            Read(trans) => Ok(StateVector(trans.state_vector())),
+        }
+    }
+
+    fn encode_diff_v1(&self, state_vector: &StateVector) -> Result<Vec<u8>, Error> {
+        use DynTransaction::{Read, Write};
+        match &self.try_dyn_transaction()? {
+            Write(trans) => Ok(trans.encode_diff_v1(&state_vector.0)),
+            Read(trans) => Ok(trans.encode_diff_v1(&state_vector.0)),
+        }
+    }
+
+    fn encode_diff_v2(&self, state_vector: &StateVector) -> Result<Vec<u8>, Error> {
+        use DynTransaction::{Read, Write};
+        match &self.try_dyn_transaction()? {
+            Write(trans) => Ok(trans.encode_diff_v2(&state_vector.0)),
+            Read(trans) => Ok(trans.encode_diff_v2(&state_vector.0)),
+        }
     }
 }
 
@@ -57,23 +93,16 @@ struct TextRef(yrs::TextRef);
 #[extendr]
 impl TextRef {
     fn insert(&self, transaction: &mut Transaction, index: u32, chunk: &str) -> Result<(), Error> {
-        use DynTransaction::{Read, Write};
-        match &mut transaction.transaction {
-            Some(Write(trans)) => {
-                self.0.insert(trans, index, chunk);
-                Ok(())
-            }
-            Some(Read(_)) => Err(Error::Other("Transaction is readonly".into())),
-            None => Err(Error::Other("Transaction was dropped".into())),
-        }
+        let trans = transaction.try_transaction_mut()?;
+        self.0.insert(trans, index, chunk);
+        Ok(())
     }
 
     fn get_string(&self, transaction: &Transaction) -> Result<String, Error> {
         use DynTransaction::{Read, Write};
-        match &transaction.transaction {
-            Some(Write(trans)) => Ok(self.0.get_string(trans)),
-            Some(Read(trans)) => Ok(self.0.get_string(trans)),
-            None => Err(Error::Other("Transaction was dropped".into())),
+        match &transaction.try_dyn_transaction()? {
+            Write(trans) => Ok(self.0.get_string(trans)),
+            Read(trans) => Ok(self.0.get_string(trans)),
         }
     }
 }
@@ -104,11 +133,50 @@ impl Doc {
     }
 }
 
+#[extendr]
+struct StateVector(yrs::StateVector);
+
+#[extendr]
+impl StateVector {
+    fn decode_v1(data: &[u8]) -> Result<Self, Error> {
+        // FIXME need to properly handle errors coming from yrs
+        let sv = yrs::StateVector::decode_v1(data).unwrap();
+        Ok(Self(sv))
+    }
+
+    fn decode_v2(data: &[u8]) -> Result<Self, Error> {
+        // FIXME need to properly handle errors coming from yrs
+        let sv = yrs::StateVector::decode_v2(data).unwrap();
+        Ok(Self(sv))
+    }
+
+    fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+
+    fn len(&self) -> usize {
+        self.0.len()
+    }
+
+    fn contains_client(&self, client_id: yrs::block::ClientID) -> bool {
+        self.0.contains_client(&client_id)
+    }
+
+    fn encode_v1(&self) -> Vec<u8> {
+        self.0.encode_v1()
+    }
+
+    fn encode_v2(&self) -> Vec<u8> {
+        self.0.encode_v2()
+    }
+}
+
 // Register function with R.
 // See corresponding C code in `entrypoint.c`.
 extendr_module! {
     mod yar;
+    impl Doc;
+    impl StateVector;
     impl Transaction;
     impl TextRef;
-    impl Doc;
 }

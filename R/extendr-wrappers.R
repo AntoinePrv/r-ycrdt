@@ -5,6 +5,16 @@
 #' @useDynLib yar, .registration = TRUE
 NULL
 
+ArrayRef <- new.env(parent = emptyenv())
+
+ArrayRef$len <- function(transaction) .Call(wrap__ArrayRef__len, self, transaction)
+
+#' @export
+`$.ArrayRef` <- function (self, name) { func <- ArrayRef[[name]]; environment(func) <- environment(); func }
+
+#' @export
+`[[.ArrayRef` <- `$.ArrayRef`
+
 Doc <- new.env(parent = emptyenv())
 
 Doc$new <- function() .Call(wrap__Doc__new)

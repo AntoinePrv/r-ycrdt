@@ -1,7 +1,8 @@
 use extendr_api::prelude::*;
 use yrs::updates::{decoder::Decode as YDecode, encoder::Encode as YEncode};
 use yrs::{
-    GetString as YGetString, Map as YMap, ReadTxn as YReadTxn, Text as YText, Transact as YTransact,
+    Array as YArray, GetString as YGetString, Map as YMap, ReadTxn as YReadTxn, Text as YText,
+    Transact as YTransact,
 };
 
 macro_rules! try_read {
@@ -283,6 +284,30 @@ impl StateVector {
 }
 
 #[extendr]
+struct ArrayRef(yrs::ArrayRef);
+
+impl From<yrs::ArrayRef> for ArrayRef {
+    fn from(value: yrs::ArrayRef) -> Self {
+        Self(value)
+    }
+}
+
+impl std::ops::Deref for ArrayRef {
+    type Target = yrs::ArrayRef;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+#[extendr]
+impl ArrayRef {
+    fn len(&self, transaction: &Transaction) -> Result<u32, Error> {
+        try_read!(transaction, t => self.0.len(t))
+    }
+}
+
+#[extendr]
 struct MapRef(yrs::MapRef);
 
 impl From<yrs::MapRef> for MapRef {
@@ -330,6 +355,7 @@ impl MapRef {
 // See corresponding C code in `entrypoint.c`.
 extendr_module! {
     mod yar;
+    impl ArrayRef;
     impl Doc;
     impl MapRef;
     impl StateVector;

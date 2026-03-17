@@ -2,6 +2,16 @@ use extendr_api::prelude::*;
 use yrs::updates::{decoder::Decode as YDecode, encoder::Encode as YEncode};
 use yrs::{GetString as YGetString, ReadTxn as YReadTxn, Text as YText, Transact as YTransact};
 
+trait IntoExtendr<T> {
+    fn extendr(self) -> extendr_api::Result<T>;
+}
+
+impl<T, E: ToString> IntoExtendr<T> for Result<T, E> {
+    fn extendr(self) -> extendr_api::Result<T> {
+        self.map_err(|e| Error::Other(e.to_string()))
+    }
+}
+
 // Perhaps we could have two different bindings of Transaction and TransactionMut
 // with the same API and use a macro to bind YTransact trait methods.
 #[allow(clippy::large_enum_variant)]
@@ -88,18 +98,14 @@ impl Transaction {
 
     fn apply_update_v1(&mut self, data: &[u8]) -> Result<(), Error> {
         let trans = self.try_transaction_mut()?;
-        // FIXME need to properly handle errors coming from yrs
-        let update = yrs::Update::decode_v1(data).unwrap();
-        trans.apply_update(update).unwrap();
-        Ok(())
+        let update = yrs::Update::decode_v1(data).extendr()?;
+        trans.apply_update(update).extendr()
     }
 
     fn apply_update_v2(&mut self, data: &[u8]) -> Result<(), Error> {
         let trans = self.try_transaction_mut()?;
-        // FIXME need to properly handle errors coming from yrs
-        let update = yrs::Update::decode_v2(data).unwrap();
-        trans.apply_update(update).unwrap();
-        Ok(())
+        let update = yrs::Update::decode_v2(data).extendr()?;
+        trans.apply_update(update).extendr()
     }
 }
 
@@ -109,15 +115,11 @@ struct Update(yrs::Update);
 #[extendr]
 impl Update {
     fn decode_v1(data: &[u8]) -> Result<Self, Error> {
-        // FIXME need to properly handle errors coming from yrs
-        let update = yrs::Update::decode_v1(data).unwrap();
-        Ok(Self(update))
+        Ok(Self(yrs::Update::decode_v1(data).extendr()?))
     }
 
     fn decode_v2(data: &[u8]) -> Result<Self, Error> {
-        // FIXME need to properly handle errors coming from yrs
-        let update = yrs::Update::decode_v2(data).unwrap();
-        Ok(Self(update))
+        Ok(Self(yrs::Update::decode_v2(data).extendr()?))
     }
 
     fn new() -> Self {
@@ -189,15 +191,11 @@ struct StateVector(yrs::StateVector);
 #[extendr]
 impl StateVector {
     fn decode_v1(data: &[u8]) -> Result<Self, Error> {
-        // FIXME need to properly handle errors coming from yrs
-        let sv = yrs::StateVector::decode_v1(data).unwrap();
-        Ok(Self(sv))
+        Ok(Self(yrs::StateVector::decode_v1(data).extendr()?))
     }
 
     fn decode_v2(data: &[u8]) -> Result<Self, Error> {
-        // FIXME need to properly handle errors coming from yrs
-        let sv = yrs::StateVector::decode_v2(data).unwrap();
-        Ok(Self(sv))
+        Ok(Self(yrs::StateVector::decode_v2(data).extendr()?))
     }
 
     fn is_empty(&self) -> bool {

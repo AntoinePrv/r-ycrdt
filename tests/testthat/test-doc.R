@@ -104,6 +104,33 @@ for (version in c("v1", "v2")) {
   }, list(version = version))
 }
 
+for (version in c("v1", "v2")) {
+  local({
+    test_that(paste("Update decode", version, "errors on invalid data"), {
+      expect_s3_class(Update[[paste0("decode_", version)]](as.raw(c(0xff))), "extendr_error")
+    })
+  }, list(version = version))
+}
+
+for (version in c("v1", "v2")) {
+  local({
+    test_that(paste("StateVector decode", version, "errors on invalid data"), {
+      expect_s3_class(StateVector[[paste0("decode_", version)]](as.raw(c(0xff))), "extendr_error")
+    })
+  }, list(version = version))
+}
+
+for (version in c("v1", "v2")) {
+  local({
+    test_that(paste("apply_update", version, "errors on invalid data"), {
+      doc <- Doc$new()
+      trans <- Transaction$new(doc, mutable = TRUE)
+      expect_s3_class(trans[[paste0("apply_update_", version)]](as.raw(c(0xff))), "extendr_error")
+      trans$drop()
+    })
+  }, list(version = version))
+}
+
 #####################
 # Integration tests #
 #####################

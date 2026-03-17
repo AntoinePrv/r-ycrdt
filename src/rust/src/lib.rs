@@ -1,6 +1,8 @@
 use extendr_api::prelude::*;
 use yrs::updates::{decoder::Decode as YDecode, encoder::Encode as YEncode};
-use yrs::{GetString as YGetString, ReadTxn as YReadTxn, Text as YText, Transact as YTransact};
+use yrs::{
+    GetString as YGetString, Map as YMap, ReadTxn as YReadTxn, Text as YText, Transact as YTransact,
+};
 
 trait IntoExtendr<T> {
     fn extendr(self) -> extendr_api::Result<T>;
@@ -83,16 +85,16 @@ impl Transaction {
     fn encode_diff_v1(&self, state_vector: &StateVector) -> Result<Vec<u8>, Error> {
         use DynTransaction::{Read, Write};
         match &self.try_dyn_transaction()? {
-            Write(trans) => Ok(trans.encode_diff_v1(&state_vector.0)),
-            Read(trans) => Ok(trans.encode_diff_v1(&state_vector.0)),
+            Write(trans) => Ok(trans.encode_diff_v1(state_vector)),
+            Read(trans) => Ok(trans.encode_diff_v1(state_vector)),
         }
     }
 
     fn encode_diff_v2(&self, state_vector: &StateVector) -> Result<Vec<u8>, Error> {
         use DynTransaction::{Read, Write};
         match &self.try_dyn_transaction()? {
-            Write(trans) => Ok(trans.encode_diff_v2(&state_vector.0)),
-            Read(trans) => Ok(trans.encode_diff_v2(&state_vector.0)),
+            Write(trans) => Ok(trans.encode_diff_v2(state_vector)),
+            Read(trans) => Ok(trans.encode_diff_v2(state_vector)),
         }
     }
 
@@ -240,6 +242,10 @@ impl Doc {
     fn get_or_insert_text(&self, name: &str) -> TextRef {
         TextRef(self.doc.get_or_insert_text(name))
     }
+
+    fn get_or_insert_map(&self, name: &str) -> MapRef {
+        MapRef(self.doc.get_or_insert_map(name))
+    }
 }
 
 #[extendr]
@@ -290,11 +296,66 @@ impl StateVector {
     }
 }
 
+#[extendr]
+struct MapRef(yrs::MapRef);
+
+impl From<yrs::MapRef> for MapRef {
+    fn from(value: yrs::MapRef) -> Self {
+        Self(value)
+    }
+}
+
+impl std::ops::Deref for MapRef {
+    type Target = yrs::MapRef;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+#[extendr]
+impl MapRef {
+    fn len(&self, transaction: &Transaction) -> Result<u32, Error> {
+        use DynTransaction::{Read, Write};
+        match &transaction.try_dyn_transaction()? {
+            Write(trans) => Ok(self.0.len(trans)),
+            Read(trans) => Ok(self.0.len(trans)),
+        }
+    }
+
+    fn contains_key(&self, transaction: &Transaction, key: &str) -> Result<bool, Error> {
+        use DynTransaction::{Read, Write};
+        match &transaction.try_dyn_transaction()? {
+            Write(trans) => Ok(self.0.contains_key(trans, key)),
+            Read(trans) => Ok(self.0.contains_key(trans, key)),
+        }
+    }
+
+    fn insert(&self, transaction: &mut Transaction, key: &str, value: &str) -> Result<(), Error> {
+        let trans = transaction.try_transaction_mut()?;
+        self.0.insert(trans, key, value);
+        Ok(())
+    }
+
+    fn remove(&self, transaction: &mut Transaction, key: &str) -> Result<(), Error> {
+        let trans = transaction.try_transaction_mut()?;
+        self.0.remove(trans, key);
+        Ok(())
+    }
+
+    fn clear(&self, transaction: &mut Transaction) -> Result<(), Error> {
+        let trans = transaction.try_transaction_mut()?;
+        self.0.clear(trans);
+        Ok(())
+    }
+}
+
 // Register function with R.
 // See corresponding C code in `entrypoint.c`.
 extendr_module! {
     mod yar;
     impl Doc;
+    impl MapRef;
     impl StateVector;
     impl TextRef;
     impl Transaction;

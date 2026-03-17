@@ -156,6 +156,46 @@ for (version in c("v1", "v2")) {
   }, list(version = version))
 }
 
+test_that("Map insert and contains_key", {
+  doc <- Doc$new()
+  map <- doc$get_or_insert_map("data")
+
+  trans <- Transaction$new(doc, mutable = TRUE)
+  map$insert(trans, "key", "value")
+
+  expect_equal(map$len(trans), 1L)
+  expect_true(map$contains_key(trans, "key"))
+  expect_false(map$contains_key(trans, "other"))
+  trans$drop()
+})
+
+test_that("Map remove decreases len", {
+  doc <- Doc$new()
+  map <- doc$get_or_insert_map("data")
+
+  trans <- Transaction$new(doc, mutable = TRUE)
+  map$insert(trans, "a", "1")
+  map$insert(trans, "b", "2")
+  map$remove(trans, "a")
+
+  expect_equal(map$len(trans), 1L)
+  expect_false(map$contains_key(trans, "a"))
+  trans$drop()
+})
+
+test_that("Map clear removes all entries", {
+  doc <- Doc$new()
+  map <- doc$get_or_insert_map("data")
+
+  trans <- Transaction$new(doc, mutable = TRUE)
+  map$insert(trans, "a", "1")
+  map$insert(trans, "b", "2")
+  map$clear(trans)
+
+  expect_equal(map$len(trans), 0L)
+  trans$drop()
+})
+
 #####################
 # Integration tests #
 #####################

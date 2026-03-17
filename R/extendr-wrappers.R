@@ -15,11 +15,31 @@ Doc$guid <- function() .Call(wrap__Doc__guid, self)
 
 Doc$get_or_insert_text <- function(name) .Call(wrap__Doc__get_or_insert_text, self, name)
 
+Doc$get_or_insert_map <- function(name) .Call(wrap__Doc__get_or_insert_map, self, name)
+
 #' @export
 `$.Doc` <- function (self, name) { func <- Doc[[name]]; environment(func) <- environment(); func }
 
 #' @export
 `[[.Doc` <- `$.Doc`
+
+MapRef <- new.env(parent = emptyenv())
+
+MapRef$len <- function(transaction) .Call(wrap__MapRef__len, self, transaction)
+
+MapRef$contains_key <- function(transaction, key) .Call(wrap__MapRef__contains_key, self, transaction, key)
+
+MapRef$insert <- function(transaction, key, value) .Call(wrap__MapRef__insert, self, transaction, key, value)
+
+MapRef$remove <- function(transaction, key) .Call(wrap__MapRef__remove, self, transaction, key)
+
+MapRef$clear <- function(transaction) .Call(wrap__MapRef__clear, self, transaction)
+
+#' @export
+`$.MapRef` <- function (self, name) { func <- MapRef[[name]]; environment(func) <- environment(); func }
+
+#' @export
+`[[.MapRef` <- `$.MapRef`
 
 StateVector <- new.env(parent = emptyenv())
 

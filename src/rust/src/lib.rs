@@ -4,6 +4,15 @@ use yrs::{
     GetString as YGetString, Map as YMap, ReadTxn as YReadTxn, Text as YText, Transact as YTransact,
 };
 
+macro_rules! try_read {
+    ($txn:expr, $t:ident => $body:expr) => {
+        $txn.try_dyn().map(|txn| match txn {
+            DynTransaction::Write($t) => $body,
+            DynTransaction::Read($t) => $body,
+        })
+    };
+}
+
 trait IntoExtendr<T> {
     fn extendr(self) -> extendr_api::Result<T>;
 }
@@ -33,14 +42,14 @@ struct Transaction {
 }
 
 impl Transaction {
-    fn try_dyn_transaction(&self) -> Result<&DynTransaction<'static>, Error> {
+    fn try_dyn(&self) -> Result<&DynTransaction<'static>, Error> {
         match &self.transaction {
             Some(trans) => Ok(trans),
             None => Err(Error::Other("Transaction was dropped".into())),
         }
     }
 
-    fn try_transaction_mut(&mut self) -> Result<&mut yrs::TransactionMut<'static>, Error> {
+    fn try_mut(&mut self) -> Result<&mut yrs::TransactionMut<'static>, Error> {
         use DynTransaction::{Read, Write};
         match &mut self.transaction {
             Some(Write(trans)) => Ok(trans),
@@ -66,8 +75,7 @@ impl Transaction {
     }
 
     fn commit(&mut self) -> Result<(), Error> {
-        self.try_transaction_mut()?.commit();
-        Ok(())
+        self.try_mut().map(|trans| trans.commit())
     }
 
     fn drop(&mut self) {
@@ -75,37 +83,25 @@ impl Transaction {
     }
 
     fn state_vector(&self) -> Result<StateVector, Error> {
-        use DynTransaction::{Read, Write};
-        match &self.try_dyn_transaction()? {
-            Write(trans) => Ok(StateVector(trans.state_vector())),
-            Read(trans) => Ok(StateVector(trans.state_vector())),
-        }
+        try_read!(self, t => t.state_vector().into())
     }
 
     fn encode_diff_v1(&self, state_vector: &StateVector) -> Result<Vec<u8>, Error> {
-        use DynTransaction::{Read, Write};
-        match &self.try_dyn_transaction()? {
-            Write(trans) => Ok(trans.encode_diff_v1(state_vector)),
-            Read(trans) => Ok(trans.encode_diff_v1(state_vector)),
-        }
+        try_read!(self, t => t.encode_diff_v1(state_vector))
     }
 
     fn encode_diff_v2(&self, state_vector: &StateVector) -> Result<Vec<u8>, Error> {
-        use DynTransaction::{Read, Write};
-        match &self.try_dyn_transaction()? {
-            Write(trans) => Ok(trans.encode_diff_v2(state_vector)),
-            Read(trans) => Ok(trans.encode_diff_v2(state_vector)),
-        }
+        try_read!(self, t => t.encode_diff_v2(state_vector))
     }
 
     fn apply_update_v1(&mut self, data: &[u8]) -> Result<(), Error> {
-        let trans = self.try_transaction_mut()?;
+        let trans = self.try_mut()?;
         let update = yrs::Update::decode_v1(data).extendr()?;
         trans.apply_update(update).extendr()
     }
 
     fn apply_update_v2(&mut self, data: &[u8]) -> Result<(), Error> {
-        let trans = self.try_transaction_mut()?;
+        let trans = self.try_mut()?;
         let update = yrs::Update::decode_v2(data).extendr()?;
         trans.apply_update(update).extendr()
     }
@@ -179,23 +175,17 @@ impl std::ops::Deref for TextRef {
 #[extendr]
 impl TextRef {
     fn len(&self, transaction: &Transaction) -> Result<u32, Error> {
-        use DynTransaction::{Read, Write};
-        match &transaction.try_dyn_transaction()? {
-            Write(trans) => Ok(self.0.len(trans)),
-            Read(trans) => Ok(self.0.len(trans)),
-        }
+        try_read!(transaction, t => self.0.len(t))
     }
 
     fn insert(&self, transaction: &mut Transaction, index: u32, chunk: &str) -> Result<(), Error> {
-        let trans = transaction.try_transaction_mut()?;
-        self.0.insert(trans, index, chunk);
-        Ok(())
+        transaction
+            .try_mut()
+            .map(|trans| self.0.insert(trans, index, chunk))
     }
 
     fn push(&self, transaction: &mut Transaction, chunk: &str) -> Result<(), Error> {
-        let trans = transaction.try_transaction_mut()?;
-        self.0.push(trans, chunk);
-        Ok(())
+        transaction.try_mut().map(|trans| self.0.push(trans, chunk))
     }
 
     fn remove_range(
@@ -204,17 +194,13 @@ impl TextRef {
         index: u32,
         len: u32,
     ) -> Result<(), Error> {
-        let trans = transaction.try_transaction_mut()?;
-        self.0.remove_range(trans, index, len);
-        Ok(())
+        transaction
+            .try_mut()
+            .map(|trans| self.0.remove_range(trans, index, len))
     }
 
     fn get_string(&self, transaction: &Transaction) -> Result<String, Error> {
-        use DynTransaction::{Read, Write};
-        match &transaction.try_dyn_transaction()? {
-            Write(trans) => Ok(self.0.get_string(trans)),
-            Read(trans) => Ok(self.0.get_string(trans)),
-        }
+        try_read!(transaction, t => self.0.get_string(t))
     }
 }
 
@@ -316,37 +302,27 @@ impl std::ops::Deref for MapRef {
 #[extendr]
 impl MapRef {
     fn len(&self, transaction: &Transaction) -> Result<u32, Error> {
-        use DynTransaction::{Read, Write};
-        match &transaction.try_dyn_transaction()? {
-            Write(trans) => Ok(self.0.len(trans)),
-            Read(trans) => Ok(self.0.len(trans)),
-        }
+        try_read!(transaction, t => self.0.len(t))
     }
 
     fn contains_key(&self, transaction: &Transaction, key: &str) -> Result<bool, Error> {
-        use DynTransaction::{Read, Write};
-        match &transaction.try_dyn_transaction()? {
-            Write(trans) => Ok(self.0.contains_key(trans, key)),
-            Read(trans) => Ok(self.0.contains_key(trans, key)),
-        }
+        try_read!(transaction, t => self.0.contains_key(t, key))
     }
 
     fn insert(&self, transaction: &mut Transaction, key: &str, value: &str) -> Result<(), Error> {
-        let trans = transaction.try_transaction_mut()?;
-        self.0.insert(trans, key, value);
-        Ok(())
+        transaction.try_mut().map(|trans| {
+            self.0.insert(trans, key, value);
+        })
     }
 
     fn remove(&self, transaction: &mut Transaction, key: &str) -> Result<(), Error> {
-        let trans = transaction.try_transaction_mut()?;
-        self.0.remove(trans, key);
-        Ok(())
+        transaction.try_mut().map(|trans| {
+            self.0.remove(trans, key);
+        })
     }
 
     fn clear(&self, transaction: &mut Transaction) -> Result<(), Error> {
-        let trans = transaction.try_transaction_mut()?;
-        self.0.clear(trans);
-        Ok(())
+        transaction.try_mut().map(|trans| self.0.clear(trans))
     }
 }
 

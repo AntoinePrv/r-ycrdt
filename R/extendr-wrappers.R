@@ -41,6 +41,10 @@ Origin$less_than_equal <- function(other) .Call(wrap__Origin__less_than_equal, s
 
 Origin$to_string <- function() .Call(wrap__Origin__to_string, self)
 
+Origin$to_bytes <- function() .Call(wrap__Origin__to_bytes, self)
+
+Origin$to_hex <- function() .Call(wrap__Origin__to_hex, self)
+
 #' @export
 `$.Origin` <- function (self, name) { func <- Origin[[name]]; environment(func) <- environment(); func }
 

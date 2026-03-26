@@ -138,6 +138,25 @@ impl Origin {
     fn to_string(&self) -> String {
         self.0.to_string()
     }
+
+    fn to_bytes(&self) -> &[u8] {
+        self.0.as_ref()
+    }
+
+    fn to_hex(&self) -> String {
+        const HEX: &[u8; 16] = b"0123456789abcdef";
+
+        self.0
+            .as_ref()
+            .iter()
+            .flat_map(|&b| {
+                [
+                    HEX[(b >> 4) as usize] as char,
+                    HEX[(b & 0x0f) as usize] as char,
+                ]
+            })
+            .collect()
+    }
 }
 
 extendr_module! {

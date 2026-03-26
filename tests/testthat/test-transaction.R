@@ -92,3 +92,10 @@ test_that("Origin can be printed", {
   origin <- Origin$new("my-id")
   expect_output(print(origin), "Origin\\([0-9a-f]+\\)")
 })
+
+test_that("Origin has hex and byte representation", {
+  origin <- Origin$new(0x0fa90b)
+  # Matches the repr in to_string
+  expect_equal(origin$to_hex(), "00000000000fa90b")
+  expect_equal(origin$to_bytes(), as.raw(c(0x00, 0x00, 0x00, 0x00, 0x00, 0x0f, 0xa9, 0x0b)))
+})

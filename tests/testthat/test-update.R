@@ -12,21 +12,30 @@ test_that("Update$new creates an empty Update", {
 })
 
 for (version in c("v1", "v2")) {
-  local({
-    test_that(paste("Update encode/decode roundtrip", version), {
-      update <- Update$new()
-      encoded <- update[[paste0("encode_", version)]]()
-      expect_true(is.raw(encoded))
-      decoded <- Update[[paste0("decode_", version)]](encoded)
-      expect_true(decoded$is_empty())
-    })
-  }, list(version = version))
+  local(
+    {
+      test_that(paste("Update encode/decode roundtrip", version), {
+        update <- Update$new()
+        encoded <- update[[paste0("encode_", version)]]()
+        expect_true(is.raw(encoded))
+        decoded <- Update[[paste0("decode_", version)]](encoded)
+        expect_true(decoded$is_empty())
+      })
+    },
+    list(version = version)
+  )
 }
 
 for (version in c("v1", "v2")) {
-  local({
-    test_that(paste("Update decode", version, "errors on invalid data"), {
-      expect_s3_class(Update[[paste0("decode_", version)]](as.raw(c(0xff))), "extendr_error")
-    })
-  }, list(version = version))
+  local(
+    {
+      test_that(paste("Update decode", version, "errors on invalid data"), {
+        expect_s3_class(
+          Update[[paste0("decode_", version)]](as.raw(c(0xff))),
+          "extendr_error"
+        )
+      })
+    },
+    list(version = version)
+  )
 }

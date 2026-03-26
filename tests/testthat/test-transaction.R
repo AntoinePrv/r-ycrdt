@@ -32,16 +32,23 @@ test_that("Errors when using Transaction after unlock", {
 
 test_that("Transaction accepts origin", {
   doc <- Doc$new()
-  doc$with_transaction(function(trans) {
-    expect_null(trans$origin())
-  }, mutable = TRUE)
+  doc$with_transaction(
+    function(trans) {
+      expect_null(trans$origin())
+    },
+    mutable = TRUE
+  )
 
   origin <- Origin$new("my-id")
-  doc$with_transaction(function(trans) {
-    o <- trans$origin()
-    expect_true(inherits(o, "Origin"))
-    expect_true(o == origin)
-  }, mutable = TRUE, origin = origin)
+  doc$with_transaction(
+    function(trans) {
+      o <- trans$origin()
+      expect_true(inherits(o, "Origin"))
+      expect_true(o == origin)
+    },
+    mutable = TRUE,
+    origin = origin
+  )
 })
 
 test_that("Transaction state_vector of empty doc is empty", {
@@ -53,32 +60,54 @@ test_that("Transaction state_vector of empty doc is empty", {
 })
 
 for (version in c("v1", "v2")) {
-  local({
-    test_that(paste("Transaction encode_diff", version, "against current state vector returns empty update"), {
-      doc <- Doc$new()
-      text <- doc$get_or_insert_text("article")
+  local(
+    {
+      test_that(
+        paste(
+          "Transaction encode_diff",
+          version,
+          "against current state vector returns empty update"
+        ),
+        {
+          doc <- Doc$new()
+          text <- doc$get_or_insert_text("article")
 
-      doc$with_transaction(function(trans) {
-        text$insert(trans, 0L, "hello")
-        trans$commit()
+          doc$with_transaction(
+            function(trans) {
+              text$insert(trans, 0L, "hello")
+              trans$commit()
 
-        sv <- trans$state_vector()
-        diff <- trans[[paste0("encode_diff_", version)]](sv)
-        expect_true(is.raw(diff))
-      }, mutable = TRUE)
-    })
-  }, list(version = version))
+              sv <- trans$state_vector()
+              diff <- trans[[paste0("encode_diff_", version)]](sv)
+              expect_true(is.raw(diff))
+            },
+            mutable = TRUE
+          )
+        }
+      )
+    },
+    list(version = version)
+  )
 }
 
 for (version in c("v1", "v2")) {
-  local({
-    test_that(paste("apply_update", version, "errors on invalid data"), {
-      doc <- Doc$new()
-      doc$with_transaction(function(trans) {
-        expect_s3_class(trans[[paste0("apply_update_", version)]](as.raw(c(0xff))), "extendr_error")
-      }, mutable = TRUE)
-    })
-  }, list(version = version))
+  local(
+    {
+      test_that(paste("apply_update", version, "errors on invalid data"), {
+        doc <- Doc$new()
+        doc$with_transaction(
+          function(trans) {
+            expect_s3_class(
+              trans[[paste0("apply_update_", version)]](as.raw(c(0xff))),
+              "extendr_error"
+            )
+          },
+          mutable = TRUE
+        )
+      })
+    },
+    list(version = version)
+  )
 }
 
 ##########
@@ -119,5 +148,8 @@ test_that("Origin has hex and byte representation", {
   origin <- Origin$new(0x0fa90b)
   # Matches the repr in to_string
   expect_equal(origin$to_hex(), "00000000000fa90b")
-  expect_equal(origin$to_bytes(), as.raw(c(0x00, 0x00, 0x00, 0x00, 0x00, 0x0f, 0xa9, 0x0b)))
+  expect_equal(
+    origin$to_bytes(),
+    as.raw(c(0x00, 0x00, 0x00, 0x00, 0x00, 0x0f, 0xa9, 0x0b))
+  )
 })

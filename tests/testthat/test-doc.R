@@ -27,15 +27,18 @@ test_that("Doc print outputs Doc(id: ..., guid: ...)", {
 })
 
 for (item in list(
-  list(method = "get_or_insert_text",  class = "TextRef"),
-  list(method = "get_or_insert_map",   class = "MapRef"),
+  list(method = "get_or_insert_text", class = "TextRef"),
+  list(method = "get_or_insert_map", class = "MapRef"),
   list(method = "get_or_insert_array", class = "ArrayRef")
 )) {
-  local({
-    test_that(paste("Doc", item$method, "returns", item$class), {
-      doc <- Doc$new()
-      obj <- doc[[item$method]]("root")
-      expect_true(inherits(obj, item$class))
-    })
-  }, list(item = item))
+  local(
+    {
+      test_that(paste("Doc", item$method, "returns", item$class), {
+        doc <- Doc$new()
+        obj <- doc[[item$method]]("root")
+        expect_true(inherits(obj, item$class))
+      })
+    },
+    list(item = item)
+  )
 }

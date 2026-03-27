@@ -9,7 +9,7 @@ pub mod update;
 
 pub use crate::type_conversion::{FromExtendr, IntoExtendr};
 pub use crate::{
-    array::ArrayRef, doc::Doc, map::MapRef, state::StateVector, text::TextRef,
+    array::ArrayRef, doc::Doc, map::MapRef, state::StateVector, text::TextRef, transaction::Origin,
     transaction::Transaction,
 };
 pub(crate) use transaction::try_read;

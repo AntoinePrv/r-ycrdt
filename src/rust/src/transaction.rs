@@ -135,8 +135,10 @@ pub struct Origin(yrs::Origin);
 
 #[extendr]
 impl Origin {
-    fn new(data: &Robj) -> Result<Self, Error> {
-        if let Ok(n) = TryInto::<i64>::try_into(data) {
+    pub fn new(data: &Robj) -> Result<Self, Error> {
+        if let Ok(origin) = TryInto::<&Origin>::try_into(data) {
+            Ok(Self(origin.0.clone()))
+        } else if let Ok(n) = TryInto::<i64>::try_into(data) {
             Ok(Self(n.into()))
         } else if let Ok(n) = TryInto::<u64>::try_into(data) {
             Ok(Self(n.into()))
@@ -149,27 +151,27 @@ impl Origin {
         }
     }
 
-    fn equal(&self, other: &Self) -> bool {
+    pub fn equal(&self, other: &Self) -> bool {
         self.0 == other.0
     }
 
-    fn less_than(&self, other: &Self) -> bool {
+    pub fn less_than(&self, other: &Self) -> bool {
         self.0 < other.0
     }
 
-    fn less_than_equal(&self, other: &Self) -> bool {
+    pub fn less_than_equal(&self, other: &Self) -> bool {
         self.0 <= other.0
     }
 
-    fn to_string(&self) -> String {
+    pub fn to_string(&self) -> String {
         self.0.to_string()
     }
 
-    fn to_bytes(&self) -> &[u8] {
+    pub fn to_bytes(&self) -> &[u8] {
         self.0.as_ref()
     }
 
-    fn to_hex(&self) -> String {
+    pub fn to_hex(&self) -> String {
         const HEX: &[u8; 16] = b"0123456789abcdef";
 
         self.0
@@ -182,6 +184,26 @@ impl Origin {
                 ]
             })
             .collect()
+    }
+}
+
+impl From<yrs::Origin> for Origin {
+    fn from(value: yrs::Origin) -> Self {
+        Self(value)
+    }
+}
+
+impl From<Origin> for yrs::Origin {
+    fn from(value: Origin) -> Self {
+        value.0
+    }
+}
+
+impl std::ops::Deref for Origin {
+    type Target = yrs::Origin;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }
 

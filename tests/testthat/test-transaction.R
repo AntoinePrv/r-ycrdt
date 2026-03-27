@@ -130,6 +130,10 @@ test_that("Origin can be created and compared with byte types", {
   expect_true(inherits(o3, "Origin"))
   expect_false(o3 == o1)
   expect_true(o3 == o2)
+
+  o4 <- Origin$new(o2)
+  expect_true(inherits(o4, "Origin"))
+  expect_true(o4 == o2)
 })
 
 test_that("Origin cannot be created with invalid types", {

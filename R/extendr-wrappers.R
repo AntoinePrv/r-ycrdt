@@ -139,6 +139,8 @@ TextRef$remove_range <- function(transaction, index, len) .Call(wrap__TextRef__r
 
 TextRef$get_string <- function(transaction) .Call(wrap__TextRef__get_string, self, transaction)
 
+TextRef$observe <- function(f, key) .Call(wrap__TextRef__observe, self, f, key)
+
 #' @export
 `$.TextRef` <- function (self, name) { func <- TextRef[[name]]; environment(func) <- environment(); func }
 

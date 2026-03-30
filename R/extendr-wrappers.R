@@ -147,6 +147,16 @@ TextRef$observe <- function(f, key) .Call(wrap__TextRef__observe, self, f, key)
 #' @export
 `[[.TextRef` <- `$.TextRef`
 
+TextEvent <- new.env(parent = emptyenv())
+
+TextEvent$path <- function() .Call(wrap__TextEvent__path, self)
+
+#' @export
+`$.TextEvent` <- function (self, name) { func <- TextEvent[[name]]; environment(func) <- environment(); func }
+
+#' @export
+`[[.TextEvent` <- `$.TextEvent`
+
 Update <- new.env(parent = emptyenv())
 
 Update$decode_v1 <- function(data) .Call(wrap__Update__decode_v1, data)

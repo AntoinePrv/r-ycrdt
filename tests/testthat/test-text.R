@@ -54,11 +54,13 @@ test_that("Text observe callback can read current state via transaction", {
   text <- doc$get_or_insert_text("article")
 
   called <- FALSE
-  observed <- NULL
+  observed_trans <- NULL
+  observed_path <- NULL
   text$observe(
     function(trans, event) {
       called <<- TRUE
-      observed <<- text$get_string(trans)
+      observed_trans <<- text$get_string(trans)
+      observed_path <<- event$path()
     },
     key = 1L
   )
@@ -69,17 +71,20 @@ test_that("Text observe callback can read current state via transaction", {
   )
 
   expect_true(called)
-  expect_equal(observed, "hello")
+  expect_equal(observed_trans, "hello")
+  expect_equal(observed_path, list())
 })
 
 test_that("Text observe callback transaction cannot be used after callback returns", {
   doc <- Doc$new()
   text <- doc$get_or_insert_text("article")
 
-  captured <- NULL
+  captured_trans <- NULL
+  captured_event <- NULL
   text$observe(
     function(trans, event) {
-      captured <<- trans
+      captured_trans <<- trans
+      captured_event <<- event
     },
     key = 1L
   )
@@ -89,8 +94,13 @@ test_that("Text observe callback transaction cannot be used after callback retur
     mutable = TRUE
   )
 
+  # Captured objects are invalidated
   expect_s3_class(
-    text$get_string(captured),
+    text$get_string(captured_trans),
+    "extendr_error"
+  )
+  expect_s3_class(
+    captured_event$path(),
     "extendr_error"
   )
 })

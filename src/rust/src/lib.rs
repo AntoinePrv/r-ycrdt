@@ -6,6 +6,7 @@ pub mod text;
 pub mod transaction;
 pub mod type_conversion;
 pub mod update;
+pub(crate) mod utils;
 
 pub use crate::type_conversion::{FromExtendr, IntoExtendr};
 pub use crate::{

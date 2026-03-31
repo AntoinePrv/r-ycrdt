@@ -149,6 +149,10 @@ TextRef$observe <- function(f, key) .Call(wrap__TextRef__observe, self, f, key)
 
 TextEvent <- new.env(parent = emptyenv())
 
+TextEvent$target <- function() .Call(wrap__TextEvent__target, self)
+
+TextEvent$delta <- function(transaction) .Call(wrap__TextEvent__delta, self, transaction)
+
 TextEvent$path <- function() .Call(wrap__TextEvent__path, self)
 
 #' @export

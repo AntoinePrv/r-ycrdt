@@ -2,6 +2,7 @@ use extendr_api::prelude::*;
 use yrs::types::{text::TextEvent as YTextEvent, PathSegment as YPathSegment};
 use yrs::{GetString as YGetString, Observable as YObservable, Text as YText};
 
+use crate::type_conversion::IntoExtendr;
 use crate::{try_read, Origin, Transaction};
 
 #[extendr]
@@ -124,6 +125,25 @@ impl lifetime::Owner<YTextEvent> for ExternalPtr<TextEvent> {
 
 #[extendr]
 impl TextEvent {
+    fn target(&self) -> Result<TextRef, Error> {
+        // Cloning is shallow BranchPtr copy pinting to same data.
+        self.try_with(|event| event.target().clone().into())
+    }
+
+    fn delta(&self, transaction: &Transaction) -> Result<List, Error> {
+        self.try_with(|event| {
+            transaction.try_write().map(|trans| {
+                event
+                    .delta(trans)
+                    .iter()
+                    .map(|delta| delta.extendr())
+                    .collect::<Result<List, _>>()
+            })
+        })
+        .and_then(|r| r) // TODO(MSRV 1.89) .flatten()
+        .and_then(|r| r) // TODO(MSRV 1.89) .flatten()
+    }
+
     fn path(&self) -> Result<List, Error> {
         self.try_with(|event| {
             event

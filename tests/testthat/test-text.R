@@ -54,13 +54,17 @@ test_that("Text observe callback can read current state via transaction", {
   text <- doc$get_or_insert_text("article")
 
   called <- FALSE
-  observed_trans <- NULL
+  observed_string <- NULL
+  observed_target_string <- NULL
   observed_path <- NULL
+  observed_delta <- NULL
   text$observe(
     function(trans, event) {
       called <<- TRUE
-      observed_trans <<- text$get_string(trans)
+      observed_string <<- text$get_string(trans)
+      observed_target_string <<- event$target()$get_string(trans)
       observed_path <<- event$path()
+      observed_delta <<- event$delta(trans)
     },
     key = 1L
   )
@@ -71,8 +75,10 @@ test_that("Text observe callback can read current state via transaction", {
   )
 
   expect_true(called)
-  expect_equal(observed_trans, "hello")
+  expect_equal(observed_string, "hello")
+  expect_equal(observed_target_string, "hello")
   expect_equal(observed_path, list())
+  expect_equal(observed_delta, list(list(insert = "hello", attributes = NULL)))
 })
 
 test_that("Text observe callback transaction cannot be used after callback returns", {

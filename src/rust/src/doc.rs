@@ -1,23 +1,9 @@
 use extendr_api::prelude::*;
 
+use crate::utils;
 use crate::{ArrayRef, MapRef, TextRef};
 
-#[extendr]
-pub struct Doc(yrs::Doc);
-
-impl From<yrs::Doc> for Doc {
-    fn from(value: yrs::Doc) -> Self {
-        Self(value)
-    }
-}
-
-impl std::ops::Deref for Doc {
-    type Target = yrs::Doc;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
+utils::extendr_struct!(#[extendr] pub Doc(yrs::Doc));
 
 #[extendr]
 impl Doc {

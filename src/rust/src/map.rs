@@ -4,24 +4,10 @@ use yrs::{
 };
 
 use crate::type_conversion::{FromExtendr, IntoExtendr};
+use crate::utils;
 use crate::{try_read, ArrayRef, TextRef, Transaction};
 
-#[extendr]
-pub struct MapRef(yrs::MapRef);
-
-impl From<yrs::MapRef> for MapRef {
-    fn from(value: yrs::MapRef) -> Self {
-        Self(value)
-    }
-}
-
-impl std::ops::Deref for MapRef {
-    type Target = yrs::MapRef;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
+utils::extendr_struct!(#[extendr] pub MapRef(yrs::MapRef));
 
 #[extendr]
 impl MapRef {

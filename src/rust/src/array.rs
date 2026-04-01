@@ -2,24 +2,10 @@ use extendr_api::prelude::*;
 use yrs::{Array as YArray, ArrayPrelim, MapPrelim as YMapPrelim, TextPrelim as YTextPrelim};
 
 use crate::type_conversion::{FromExtendr, IntoExtendr};
+use crate::utils;
 use crate::{try_read, MapRef, TextRef, Transaction};
 
-#[extendr]
-pub struct ArrayRef(yrs::ArrayRef);
-
-impl From<yrs::ArrayRef> for ArrayRef {
-    fn from(value: yrs::ArrayRef) -> Self {
-        Self(value)
-    }
-}
-
-impl std::ops::Deref for ArrayRef {
-    type Target = yrs::ArrayRef;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
+utils::extendr_struct!(#[extendr] pub ArrayRef(yrs::ArrayRef));
 
 #[extendr]
 impl ArrayRef {

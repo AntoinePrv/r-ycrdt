@@ -1,5 +1,26 @@
 use extendr_api::prelude::*;
 
+macro_rules! extendr_struct {
+    ($(#[$attr:meta])* $vis:vis $T:ident($Y:ty)) => {
+        $(#[$attr])*
+        $vis struct $T($Y);
+
+        impl AsRef<$Y> for $T {
+            fn as_ref(&self) -> &$Y {
+                &self.0
+            }
+        }
+
+        impl From<$Y> for $T {
+            fn from(value: $Y) -> Self {
+                Self(value)
+            }
+        }
+    };
+}
+
+pub(crate) use extendr_struct;
+
 impl<T, Y> lifetime::Owner<Y> for ExternalPtr<T>
 where
     T: AsRef<lifetime::CheckedRef<Y>> + From<lifetime::CheckedRef<Y>>,

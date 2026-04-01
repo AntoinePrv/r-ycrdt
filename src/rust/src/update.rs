@@ -33,7 +33,7 @@ impl Update {
     }
 
     pub fn extends(&self, state_vector: &StateVector) -> bool {
-        self.0.extends(state_vector)
+        self.0.extends(state_vector.as_ref())
     }
 
     pub fn encode_v1(&self) -> Vec<u8> {

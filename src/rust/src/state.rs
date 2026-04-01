@@ -2,23 +2,9 @@ use extendr_api::prelude::*;
 use yrs::updates::{decoder::Decode as YDecode, encoder::Encode as YEncode};
 
 use crate::type_conversion::IntoExtendr;
+use crate::utils;
 
-#[extendr]
-pub struct StateVector(yrs::StateVector);
-
-impl From<yrs::StateVector> for StateVector {
-    fn from(value: yrs::StateVector) -> Self {
-        Self(value)
-    }
-}
-
-impl std::ops::Deref for StateVector {
-    type Target = yrs::StateVector;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
+utils::extendr_struct!(#[extendr] pub StateVector(yrs::StateVector));
 
 #[extendr]
 impl StateVector {

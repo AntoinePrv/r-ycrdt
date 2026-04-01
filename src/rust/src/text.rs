@@ -3,25 +3,10 @@ use yrs::types::{text::TextEvent as YTextEvent, PathSegment as YPathSegment};
 use yrs::{GetString as YGetString, Observable as YObservable, Text as YText};
 
 use crate::type_conversion::IntoExtendr;
-use crate::utils::{lifetime, ExtendrRef};
+use crate::utils::{self, lifetime, ExtendrRef};
 use crate::{try_read, Origin, Transaction};
 
-#[extendr]
-pub struct TextRef(yrs::TextRef);
-
-impl From<yrs::TextRef> for TextRef {
-    fn from(value: yrs::TextRef) -> Self {
-        Self(value)
-    }
-}
-
-impl std::ops::Deref for TextRef {
-    type Target = yrs::TextRef;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
+utils::extendr_struct!(#[extendr] pub TextRef(yrs::TextRef));
 
 #[extendr]
 impl TextRef {
@@ -91,20 +76,7 @@ impl TextRef {
     }
 }
 
-#[extendr]
-struct TextEvent(lifetime::CheckedRef<YTextEvent>);
-
-impl AsRef<lifetime::CheckedRef<YTextEvent>> for TextEvent {
-    fn as_ref(&self) -> &lifetime::CheckedRef<YTextEvent> {
-        &self.0
-    }
-}
-
-impl From<lifetime::CheckedRef<YTextEvent>> for TextEvent {
-    fn from(value: lifetime::CheckedRef<YTextEvent>) -> Self {
-        Self(value)
-    }
-}
+utils::extendr_struct!(#[extendr] pub TextEvent(lifetime::CheckedRef<YTextEvent>));
 
 #[extendr]
 impl TextEvent {

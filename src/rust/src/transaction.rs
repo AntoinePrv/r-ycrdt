@@ -3,6 +3,7 @@ use yrs::updates::decoder::Decode as YDecode;
 use yrs::{ReadTxn as YReadTxn, Transact as YTransact};
 
 use crate::type_conversion::IntoExtendr;
+use crate::utils;
 use crate::{Doc, StateVector};
 
 macro_rules! try_read {
@@ -97,12 +98,13 @@ impl Transaction {
         #[extendr(default = "FALSE")] mutable: bool,
         #[extendr(default = "NULL")] origin: Nullable<&Origin>,
     ) -> Self {
+        let doc_inner: &yrs::Doc = (*doc).as_ref();
         let transaction = match (mutable, origin) {
             (true, Nullable::NotNull(o)) => {
-                DynTransaction::Write(doc.transact_mut_with(o.0.clone()))
+                DynTransaction::Write(doc_inner.transact_mut_with(o.0.clone()))
             }
-            (true, Nullable::Null) => DynTransaction::Write(doc.transact_mut()),
-            (false, _) => DynTransaction::Read(doc.transact()),
+            (true, Nullable::Null) => DynTransaction::Write(doc_inner.transact_mut()),
+            (false, _) => DynTransaction::Read(doc_inner.transact()),
         };
 
         // Safety: Doc lives in R memory and is kept alive by the `owner` field of this struct.
@@ -141,11 +143,11 @@ impl Transaction {
     }
 
     pub fn encode_diff_v1(&self, state_vector: &StateVector) -> Result<Vec<u8>, Error> {
-        try_read!(self, t => t.encode_diff_v1(state_vector))
+        try_read!(self, t => t.encode_diff_v1(state_vector.as_ref()))
     }
 
     pub fn encode_diff_v2(&self, state_vector: &StateVector) -> Result<Vec<u8>, Error> {
-        try_read!(self, t => t.encode_diff_v2(state_vector))
+        try_read!(self, t => t.encode_diff_v2(state_vector.as_ref()))
     }
 
     pub fn apply_update_v1(&mut self, data: &[u8]) -> Result<(), Error> {
@@ -161,8 +163,7 @@ impl Transaction {
     }
 }
 
-#[extendr]
-pub struct Origin(yrs::Origin);
+utils::extendr_struct!(#[extendr] pub Origin(yrs::Origin));
 
 #[extendr]
 impl Origin {
@@ -218,23 +219,9 @@ impl Origin {
     }
 }
 
-impl From<yrs::Origin> for Origin {
-    fn from(value: yrs::Origin) -> Self {
-        Self(value)
-    }
-}
-
 impl From<Origin> for yrs::Origin {
     fn from(value: Origin) -> Self {
         value.0
-    }
-}
-
-impl std::ops::Deref for Origin {
-    type Target = yrs::Origin;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
     }
 }
 

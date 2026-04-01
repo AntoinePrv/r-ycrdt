@@ -1,6 +1,7 @@
 use extendr_api::prelude::*;
 use yrs::types::{
-    Attrs as YAttrs, Delta as YDelta, EntryChange as YEntryChange, PathSegment as YPathSegment,
+    Attrs as YAttrs, Change as YChange, Delta as YDelta, EntryChange as YEntryChange,
+    PathSegment as YPathSegment,
 };
 use yrs::{Any as YAny, Out as YOut};
 
@@ -90,14 +91,15 @@ impl IntoExtendr<Robj> for &YAny {
     }
 }
 
-impl IntoExtendr<Robj> for YOut {
+impl IntoExtendr<Robj> for &YOut {
     fn extendr(self) -> extendr_api::Result<Robj> {
         match self {
             YOut::Any(v) => v.extendr(),
-            YOut::YText(v) => Ok(crate::TextRef::from(v).into()),
-            YOut::YArray(v) => Ok(crate::ArrayRef::from(v).into()),
-            YOut::YMap(v) => Ok(crate::MapRef::from(v).into()),
-            YOut::YDoc(v) => Ok(crate::Doc::from(v).into()),
+            // Cheap pointer copies in clone
+            YOut::YText(v) => Ok(crate::TextRef::from(v.clone()).into()),
+            YOut::YArray(v) => Ok(crate::ArrayRef::from(v.clone()).into()),
+            YOut::YMap(v) => Ok(crate::MapRef::from(v.clone()).into()),
+            YOut::YDoc(v) => Ok(crate::Doc::from(v.clone()).into()),
             YOut::YXmlElement(_) => {
                 Err(Error::Other("YXmlElement is not yet supported".to_string()))
             }
@@ -110,27 +112,33 @@ impl IntoExtendr<Robj> for YOut {
     }
 }
 
+impl IntoExtendr<Robj> for YOut {
+    fn extendr(self) -> extendr_api::Result<Robj> {
+        (&self).extendr()
+    }
+}
+
 impl IntoExtendr<Robj> for &YDelta<YOut> {
     fn extendr(self) -> extendr_api::Result<Robj> {
         match self {
-            YDelta::Inserted(content, attrs) => Ok(List::from_names_and_values(
-                ["insert", "attributes"],
-                [content.clone().extendr()?, attrs.as_deref().extendr()?],
-            )?
-            .into()),
+            YDelta::Inserted(content, attrs) => Ok(List::from_pairs([
+                ("inserted", content.clone().extendr()?),
+                ("attributes", attrs.as_deref().extendr()?),
+            ])
+            .into_robj()),
             YDelta::Deleted(n) => {
                 let n = i32::try_from(*n)
                     .map_err(|_| Error::Other(format!("{n} does not fit in i32")))?;
-                Ok(List::from_names_and_values(["delete"], [Robj::from(n)])?.into())
+                Ok(List::from_pairs([("deleted", Robj::from(n))]).into_robj())
             }
             YDelta::Retain(n, attrs) => {
                 let n = i32::try_from(*n)
                     .map_err(|_| Error::Other(format!("{n} does not fit in i32")))?;
-                Ok(List::from_names_and_values(
-                    ["retain", "attributes"],
-                    [Robj::from(n), attrs.as_deref().extendr()?],
-                )?
-                .into())
+                Ok(List::from_pairs([
+                    ("retain", Robj::from(n)),
+                    ("attributes", attrs.as_deref().extendr()?),
+                ])
+                .into_robj())
             }
         }
     }
@@ -140,15 +148,36 @@ impl IntoExtendr<Robj> for &YEntryChange {
     fn extendr(self) -> extendr_api::Result<Robj> {
         match self {
             YEntryChange::Inserted(new) => {
-                Ok(List::from_names_and_values(["inserted"], [new.clone().extendr()?])?.into())
+                Ok(List::from_pairs([("inserted", new.clone().extendr()?)]).into_robj())
             }
-            YEntryChange::Updated(old, new) => Ok(List::from_names_and_values(
-                ["removed", "inserted"],
-                [old.clone().extendr()?, new.clone().extendr()?],
-            )?
-            .into()),
+            YEntryChange::Updated(old, new) => Ok(List::from_pairs([
+                ("removed", old.clone().extendr()?),
+                ("inserted", new.clone().extendr()?),
+            ])
+            .into_robj()),
             YEntryChange::Removed(old) => {
-                Ok(List::from_names_and_values(["removed"], [old.clone().extendr()?])?.into())
+                Ok(List::from_pairs([("removed", old.clone().extendr()?)]).into_robj())
+            }
+        }
+    }
+}
+
+impl IntoExtendr<Robj> for &YChange {
+    fn extendr(self) -> extendr_api::Result<Robj> {
+        match self {
+            YChange::Added(values) => {
+                let items = values.extendr()?;
+                Ok(List::from_pairs([("added", items)]).into_robj())
+            }
+            YChange::Removed(n) => {
+                let n = i32::try_from(*n)
+                    .map_err(|_| Error::Other(format!("{n} does not fit in i32")))?;
+                Ok(List::from_pairs([("removed", Robj::from(n))]).into_robj())
+            }
+            YChange::Retain(n) => {
+                let n = i32::try_from(*n)
+                    .map_err(|_| Error::Other(format!("{n} does not fit in i32")))?;
+                Ok(List::from_pairs([("retain", Robj::from(n))]).into_robj())
             }
         }
     }
@@ -328,7 +357,7 @@ mod tests {
         extendr_api::test! {
             let delta = YDelta::Inserted(YOut::Any(YAny::String(std::sync::Arc::from("hello"))), None);
             let robj = delta.extendr().unwrap();
-            let expected = R!(r#"list(insert="hello", attributes=NULL)"#).unwrap();
+            let expected = R!(r#"list(inserted="hello", attributes=NULL)"#).unwrap();
             assert_eq!(robj , expected);
         }
     }
@@ -340,7 +369,7 @@ mod tests {
                 (std::sync::Arc::from("bold"), YAny::Bool(true)),
             ]));
             let delta = YDelta::Inserted(YOut::Any(YAny::String(std::sync::Arc::from("hi"))), Some(attrs));
-            assert_eq!(delta.extendr().unwrap(), R!(r#"list(insert="hi", attributes=list(bold=TRUE))"#).unwrap());
+            assert_eq!(delta.extendr().unwrap(), R!(r#"list(inserted="hi", attributes=list(bold=TRUE))"#).unwrap());
         }
     }
 
@@ -348,7 +377,7 @@ mod tests {
     fn test_to_delta_deleted() {
         extendr_api::test! {
             let delta: YDelta<YOut> = YDelta::Deleted(3);
-            assert_eq!(delta.extendr().unwrap(), R!(r#"list(delete=3L)"#).unwrap());
+            assert_eq!(delta.extendr().unwrap(), R!(r#"list(deleted=3L)"#).unwrap());
         }
     }
 
@@ -456,6 +485,36 @@ mod tests {
             );
             let robj = change.extendr().unwrap();
             assert_eq!(robj, R!(r#"list(removed="old", inserted="new")"#).unwrap());
+        }
+    }
+
+    #[test]
+    fn test_to_change_added() {
+        extendr_api::test! {
+            let change = YChange::Added(vec![
+                YOut::Any(YAny::Number(1.0)),
+                YOut::Any(YAny::String(Arc::from("hi"))),
+            ]);
+            let robj = change.extendr().unwrap();
+            assert_eq!(robj, R!(r#"list(added=list(1.0, "hi"))"#).unwrap());
+        }
+    }
+
+    #[test]
+    fn test_to_change_removed() {
+        extendr_api::test! {
+            let change = YChange::Removed(3);
+            let robj = change.extendr().unwrap();
+            assert_eq!(robj, R!(r#"list(removed=3L)"#).unwrap());
+        }
+    }
+
+    #[test]
+    fn test_to_change_retain() {
+        extendr_api::test! {
+            let change = YChange::Retain(5);
+            let robj = change.extendr().unwrap();
+            assert_eq!(robj, R!(r#"list(retain=5L)"#).unwrap());
         }
     }
 

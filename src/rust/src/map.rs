@@ -56,7 +56,7 @@ impl MapRef {
     }
 
     pub fn get(&self, transaction: &mut Transaction, key: &str) -> Result<Robj, Error> {
-        try_read!(transaction, t => self.0.get(t, key).extendr()).and_then(|r| r)
+        try_read!(transaction, t => self.0.get(t, key).as_ref().extendr()).and_then(|r| r)
     }
 
     pub fn keys(&self, transaction: &mut Transaction) -> Result<Strings, Error> {

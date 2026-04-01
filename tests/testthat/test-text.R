@@ -78,7 +78,10 @@ test_that("Text observe callback can read current state via transaction", {
   expect_equal(observed_string, "hello")
   expect_equal(observed_target_string, "hello")
   expect_equal(observed_path, list())
-  expect_equal(observed_delta, list(list(insert = "hello", attributes = NULL)))
+  expect_equal(
+    observed_delta,
+    list(list(inserted = "hello", attributes = NULL))
+  )
 })
 
 test_that("Text unobserve stops callback from firing", {

@@ -48,7 +48,7 @@ impl ArrayRef {
     }
 
     pub fn get(&self, transaction: &mut Transaction, index: u32) -> Result<Robj, Error> {
-        try_read!(transaction, t => self.0.get(t, index).extendr()).and_then(|r| r)
+        try_read!(transaction, t => self.0.get(t, index).as_ref().extendr()).and_then(|r| r)
     }
 
     pub fn remove(&self, transaction: &mut Transaction, index: u32) -> Result<(), Error> {

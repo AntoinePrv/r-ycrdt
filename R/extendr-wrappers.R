@@ -147,6 +147,10 @@ MapEvent$path <- function() .Call(wrap__MapEvent__path, self)
 
 SyncMessage <- new.env(parent = emptyenv())
 
+SyncMessage$decode_v1 <- function(data) .Call(wrap__SyncMessage__decode_v1, data)
+
+SyncMessage$decode_v2 <- function(data) .Call(wrap__SyncMessage__decode_v2, data)
+
 SyncMessage$new <- function(sync_step1 = NULL, sync_step2 = NULL, update = NULL) .Call(wrap__SyncMessage__new, sync_step1, sync_step2, update)
 
 SyncMessage$from_sync_step1 <- function(state_vector) .Call(wrap__SyncMessage__from_sync_step1, state_vector)
@@ -154,6 +158,10 @@ SyncMessage$from_sync_step1 <- function(state_vector) .Call(wrap__SyncMessage__f
 SyncMessage$from_sync_step2 <- function(data) .Call(wrap__SyncMessage__from_sync_step2, data)
 
 SyncMessage$from_update <- function(data) .Call(wrap__SyncMessage__from_update, data)
+
+SyncMessage$encode_v1 <- function() .Call(wrap__SyncMessage__encode_v1, self)
+
+SyncMessage$encode_v2 <- function() .Call(wrap__SyncMessage__encode_v2, self)
 
 SyncMessage$step <- function() .Call(wrap__SyncMessage__step, self)
 

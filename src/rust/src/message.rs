@@ -1,7 +1,9 @@
 use extendr_api::prelude::*;
 
 use yrs::sync::SyncMessage as YSyncMessage;
+use yrs::updates::{decoder::Decode as YDecode, encoder::Encode as YEncode};
 
+use crate::type_conversion::IntoExtendr;
 use crate::utils;
 use crate::StateVector;
 
@@ -9,6 +11,14 @@ utils::extendr_struct!(#[extendr] pub SyncMessage(YSyncMessage));
 
 #[extendr]
 impl SyncMessage {
+    fn decode_v1(data: &[u8]) -> Result<Self, Error> {
+        YSyncMessage::decode_v1(data).extendr().map(From::from)
+    }
+
+    fn decode_v2(data: &[u8]) -> Result<Self, Error> {
+        YSyncMessage::decode_v2(data).extendr().map(From::from)
+    }
+
     fn new(
         #[extendr(default = "NULL")] sync_step1: Robj,
         #[extendr(default = "NULL")] sync_step2: Robj,
@@ -39,6 +49,14 @@ impl SyncMessage {
 
     fn from_update(data: &[u8]) -> Result<Self, Error> {
         Ok(Self::from(YSyncMessage::Update(data.to_vec())))
+    }
+
+    fn encode_v1(&self) -> Vec<u8> {
+        self.as_ref().encode_v1()
+    }
+
+    fn encode_v2(&self) -> Vec<u8> {
+        self.as_ref().encode_v2()
     }
 
     fn step(&self) -> &str {

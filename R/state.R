@@ -34,6 +34,19 @@ NULL
   e1$greater_than_equal(e2)
 }
 
+#' @export Snapshot
+NULL
+
+#' @export
+`==.Snapshot` <- function(e1, e2) {
+  e1$equal(e2)
+}
+
+#' @export
+`!=.Snapshot` <- function(e1, e2) {
+  e1$not_equal(e2)
+}
+
 #' @export DeleteSet
 NULL
 

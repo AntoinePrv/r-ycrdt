@@ -257,6 +257,28 @@ DeleteSet$merge <- function(other) .Call(wrap__DeleteSet__merge, self, other)
 #' @export
 `[[.DeleteSet` <- `$.DeleteSet`
 
+Snapshot <- new.env(parent = emptyenv())
+
+Snapshot$new <- function(state_map, delete_set) .Call(wrap__Snapshot__new, state_map, delete_set)
+
+Snapshot$decode_v1 <- function(data) .Call(wrap__Snapshot__decode_v1, data)
+
+Snapshot$decode_v2 <- function(data) .Call(wrap__Snapshot__decode_v2, data)
+
+Snapshot$encode_v1 <- function() .Call(wrap__Snapshot__encode_v1, self)
+
+Snapshot$encode_v2 <- function() .Call(wrap__Snapshot__encode_v2, self)
+
+Snapshot$equal <- function(other) .Call(wrap__Snapshot__equal, self, other)
+
+Snapshot$not_equal <- function(other) .Call(wrap__Snapshot__not_equal, self, other)
+
+#' @export
+`$.Snapshot` <- function (self, name) { func <- Snapshot[[name]]; environment(func) <- environment(); func }
+
+#' @export
+`[[.Snapshot` <- `$.Snapshot`
+
 TextRef <- new.env(parent = emptyenv())
 
 TextRef$len <- function(transaction) .Call(wrap__TextRef__len, self, transaction)

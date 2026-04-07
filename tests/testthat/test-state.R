@@ -138,3 +138,58 @@ test_that("DeleteSet equality", {
   expect_true(ds3 == ds4)
   expect_false(ds3 != ds4)
 })
+
+############
+# Snapshot #
+############
+
+test_that("Snapshot$new() from empty StateVector and DeleteSet", {
+  sv <- StateVector$decode_v1(as.raw(0x00))
+  ds <- DeleteSet$new()
+  snap <- Snapshot$new(sv, ds)
+  encoded <- snap$encode_v1()
+  expect_type(encoded, "raw")
+})
+
+for (version in c("v1", "v2")) {
+  local(
+    {
+      encode <- paste0("encode_", version)
+      decode <- paste0("decode_", version)
+
+      test_that(
+        paste("Snapshot encode/decode", version, "roundtrip"),
+        {
+          sv <- StateVector$decode_v1(as.raw(0x00))
+          ds <- DeleteSet$new()
+          snap <- Snapshot$new(sv, ds)
+          encoded <- snap[[encode]]()
+          expect_type(encoded, "raw")
+          decoded <- Snapshot[[decode]](encoded)
+          expect_true(decoded == snap)
+        }
+      )
+
+      test_that(
+        paste("Snapshot decode", version, "errors on invalid data"),
+        {
+          expect_s3_class(
+            Snapshot[[decode]](as.raw(c(0xff))),
+            "extendr_error"
+          )
+        }
+      )
+    },
+    list(version = version)
+  )
+}
+
+test_that("Snapshot equality", {
+  sv1 <- StateVector$decode_v1(as.raw(0x00))
+  sv2 <- StateVector$decode_v1(as.raw(0x00))
+  ds <- DeleteSet$new()
+  snap1 <- Snapshot$new(sv1, ds)
+  snap2 <- Snapshot$new(sv2, ds)
+  expect_true(snap1 == snap2)
+  expect_false(snap1 != snap2)
+})

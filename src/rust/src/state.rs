@@ -1,8 +1,7 @@
-use extendr_api::prelude::*;
-use yrs::updates::{decoder::Decode as YDecode, encoder::Encode as YEncode};
-
 use crate::type_conversion::{FromExtendr, IntoExtendr};
 use crate::utils;
+use extendr_api::prelude::*;
+use yrs::updates::{decoder::Decode as YDecode, encoder::Encode as YEncode};
 
 utils::extendr_struct!(#[extendr] pub StateVector(yrs::StateVector));
 
@@ -115,8 +114,42 @@ impl DeleteSet {
     }
 }
 
+utils::extendr_struct!(#[extendr] pub Snapshot(yrs::Snapshot));
+
+#[extendr]
+impl Snapshot {
+    fn new(state_map: &StateVector, delete_set: &DeleteSet) -> Self {
+        yrs::Snapshot::new(state_map.0.clone(), delete_set.0.clone()).into()
+    }
+
+    fn decode_v1(data: &[u8]) -> Result<Self, Error> {
+        yrs::Snapshot::decode_v1(data).extendr().map(Self)
+    }
+
+    fn decode_v2(data: &[u8]) -> Result<Self, Error> {
+        yrs::Snapshot::decode_v2(data).extendr().map(Self)
+    }
+
+    fn encode_v1(&self) -> Vec<u8> {
+        self.0.encode_v1()
+    }
+
+    fn encode_v2(&self) -> Vec<u8> {
+        self.0.encode_v2()
+    }
+
+    fn equal(&self, other: &Self) -> bool {
+        self.0.eq(&other.0)
+    }
+
+    fn not_equal(&self, other: &Self) -> bool {
+        self.0.ne(&other.0)
+    }
+}
+
 extendr_module! {
     mod state;
     impl StateVector;
     impl DeleteSet;
+    impl Snapshot;
 }

@@ -1,2 +1,2 @@
-# yar
-y-crdt bindings for R lang
+# YR
+R bindings to the y-crdt crate.

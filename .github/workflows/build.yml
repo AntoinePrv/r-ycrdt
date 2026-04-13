@@ -41,5 +41,7 @@ jobs:
           pixi-version: v0.65.0
           cache: true
           environments: dev
-      - name: Test bindings
+      - name: Unit tests
+        run: pixi run test-cargo
+      - name: R integration tests
         run: pixi run test-r

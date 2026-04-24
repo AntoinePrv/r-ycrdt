@@ -40,28 +40,33 @@ if (!is_not_cran) {
 # We specify this target when building for webR
 webr_target <- "wasm32-unknown-emscripten"
 
-# here we check if the platform we are building for is webr
+# Here we check if the platform we are building for is webr
 is_wasm <- identical(R.version$platform, webr_target)
+# Check wether the CARGO_BUILD_TARGET has been set (e.g. in cross compilation)
+cargo_build_target <- Sys.getenv("CARGO_BUILD_TARGET")
 
-# print to terminal to inform we are building for webr
 if (is_wasm) {
   message("Building for WebR")
+  cargo_build_target <- webr_target
 }
 
-# we check if we are making a debug build or not
-# if so, the LIBDIR environment variable becomes:
-# LIBDIR = $(TARGET_DIR)/{wasm32-unknown-emscripten}/debug
-# this will be used to fill out the LIBDIR env var for Makevars.in
-target_libpath <- if (is_wasm) "wasm32-unknown-emscripten" else NULL
+# We have an explicit target
+if (nchar(cargo_build_target) > 0) {
+  # Add cargo target to exected subfolder output of cargo target dir
+  target_libpath <- cargo_build_target
+  # Used this to replace @TARGET@
+  .target <- paste0("--target=", cargo_build_target)
+} else {
+  target_libpath <- NULL
+  .target <- ""
+}
+
+# Check if we are making a debug build or not if so, the LIBDIR environment
+# variable must add the debug subfolder.
 cfg <- if (is_debug) "debug" else "release"
 
 # used to replace @LIBDIR@
 .libdir <- paste(c(target_libpath, cfg), collapse = "/")
-
-# use this to replace @TARGET@
-# we specify the target _only_ on webR
-# there may be use cases later where this can be adapted or expanded
-.target <- ifelse(is_wasm, paste0("--target=", webr_target), "")
 
 # add panic exports only for WASM builds
 .panic_exports <- ifelse(

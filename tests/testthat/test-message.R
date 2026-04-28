@@ -119,12 +119,18 @@ test_that("SyncMessage decode errors on invalid data", {
   expect_s3_class(SyncMessage$decode_v2(as.raw(c(0xff))), "extendr_error")
 })
 
-test_that("Message from_sync_message and inner", {
+test_that("Message construction from SyncMessage and inner", {
   sync_msg <- SyncMessage$from_sync_step2(as.raw(c(0x01, 0x02, 0x03)))
-  msg <- Message$from_sync_message(sync_msg)
+  msg <- Message$new(sync_msg)
   expect_s3_class(msg, "Message")
   expect_s3_class(msg$inner(), "SyncMessage")
   expect_true(msg$is_sync_message())
+})
+
+test_that("Message$new errors on unsupported input", {
+  expect_s3_class(Message$new(42L), "extendr_error")
+  expect_s3_class(Message$new("not a message"), "extendr_error")
+  expect_s3_class(Message$new(list(1, 2)), "extendr_error")
 })
 
 for (version in c("v1", "v2")) {
@@ -139,7 +145,7 @@ for (version in c("v1", "v2")) {
     update_bytes <- doc$with_transaction(function(txn) txn$encode_diff_v1(sv))
 
     decoded <- decode(
-      Message$from_sync_message(SyncMessage$from_update(update_bytes))[[
+      Message$new(SyncMessage$from_update(update_bytes))[[
         encode
       ]]()
     )

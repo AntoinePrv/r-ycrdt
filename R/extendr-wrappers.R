@@ -203,7 +203,7 @@ Message$decode_v1 <- function(data) .Call(wrap__Message__decode_v1, data)
 
 Message$decode_v2 <- function(data) .Call(wrap__Message__decode_v2, data)
 
-Message$from_sync_message <- function(sync_message) .Call(wrap__Message__from_sync_message, sync_message)
+Message$new <- function(obj) .Call(wrap__Message__new, obj)
 
 Message$inner <- function() .Call(wrap__Message__inner, self)
 
@@ -218,6 +218,16 @@ Message$encode_v2 <- function() .Call(wrap__Message__encode_v2, self)
 
 #' @export
 `[[.Message` <- `$.Message`
+
+Unsupported <- new.env(parent = emptyenv())
+
+Unsupported$new <- function() .Call(wrap__Unsupported__new)
+
+#' @export
+`$.Unsupported` <- function (self, name) { func <- Unsupported[[name]]; environment(func) <- environment(); func }
+
+#' @export
+`[[.Unsupported` <- `$.Unsupported`
 
 StateVector <- new.env(parent = emptyenv())
 

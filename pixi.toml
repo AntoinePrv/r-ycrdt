@@ -24,17 +24,17 @@ c-compiler = ">=1.7.0,<2"
 # R on conda-forge Windows is built with Rtools (MinGW); the import library is
 # MinGW-format so the MinGW linker is required even though R.lib exists.
 [feature.build.target.win-64.dependencies]
-m2w64-toolchain = "*"
-m2-filesystem = "*"
-m2-sed = "*"
-m2-grep = "*"
+m2-autoconf = "*"
+m2-automake-wrapper = "*"
 m2-coreutils = "*"
+m2-filesystem = "*"
+m2-grep = "*"
 m2-make = "*"
 m2-pkg-config = "*"
-m2-automake-wrapper = "*"
-
-[feature.build.activation.env]
-RUSTC_WRAPPER = "sccache"
+m2-sed = "*"
+m2-zip = "*"
+rust-std-x86_64-pc-windows-gnu = "*"
+gcc = "*"
 
 [feature.build.target.osx.activation.env]
 RUSTFLAGS = "-C link-arg=-rpath -C link-arg=$CONDA_PREFIX/lib/"
@@ -42,6 +42,8 @@ RUSTFLAGS = "-C link-arg=-rpath -C link-arg=$CONDA_PREFIX/lib/"
 [feature.build.target.linux.activation.env]
 RUSTFLAGS = "-C link-arg=-Wl,-rpath,$CONDA_PREFIX/lib/R/lib"
 
+[feature.build.activation.env]
+RUSTC_WRAPPER = "sccache"
 
 [feature.build.tasks.build-lib]
 description = "Compile Rust code into a library"
@@ -84,7 +86,8 @@ r-devtools = "*"
 [feature.test.tasks.test-r]
 description = "Run R bindings tests"
 cmd = "Rscript -e 'devtools::test()'"
-env = { DEBUG = "1" }
+# Wrappers are build as a separate task
+env = { DEBUG = "1", EXTENDR_SKIP_BUILD_WRAPPERS = "1" }
 depends-on = ["build-namespace"]
 
 [feature.test.tasks.test-cargo]

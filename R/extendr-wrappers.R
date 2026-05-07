@@ -199,6 +199,28 @@ SyncMessage$data <- function() .Call(wrap__SyncMessage__data, self)
 #' @export
 `[[.SyncMessage` <- `$.SyncMessage`
 
+Message <- new.env(parent = emptyenv())
+
+Message$decode_v1 <- function(data) .Call(wrap__Message__decode_v1, data)
+
+Message$decode_v2 <- function(data) .Call(wrap__Message__decode_v2, data)
+
+Message$from_sync_message <- function(sync_message) .Call(wrap__Message__from_sync_message, sync_message)
+
+Message$inner <- function() .Call(wrap__Message__inner, self)
+
+Message$is_sync_message <- function() .Call(wrap__Message__is_sync_message, self)
+
+Message$encode_v1 <- function() .Call(wrap__Message__encode_v1, self)
+
+Message$encode_v2 <- function() .Call(wrap__Message__encode_v2, self)
+
+#' @export
+`$.Message` <- function (self, name) { func <- Message[[name]]; environment(func) <- environment(); func }
+
+#' @export
+`[[.Message` <- `$.Message`
+
 StateVector <- new.env(parent = emptyenv())
 
 StateVector$decode_v1 <- function(data) .Call(wrap__StateVector__decode_v1, data)

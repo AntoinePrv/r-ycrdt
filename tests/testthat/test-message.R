@@ -125,3 +125,31 @@ test_that("SyncMessage decode errors on invalid data", {
   expect_s3_class(SyncMessage$decode_v1(as.raw(c(0xff))), "extendr_error")
   expect_s3_class(SyncMessage$decode_v2(as.raw(c(0xff))), "extendr_error")
 })
+
+test_that("Message from_sync_message and inner", {
+  sync_msg <- SyncMessage$new(sync_step2 = as.raw(c(0x01, 0x02, 0x03)))
+  msg <- Message$from_sync_message(sync_msg)
+  expect_s3_class(msg, "Message")
+  expect_s3_class(msg$inner(), "SyncMessage")
+  expect_true(msg$is_sync_message())
+})
+
+for (version in c("v1", "v2")) {
+  test_that(paste("Message encode/decode round-trip", version), {
+    encode <- paste0("encode_", version)
+    decode <- Message[[paste0("decode_", version)]]
+
+    doc <- Doc$new()
+    text <- doc$get_or_insert_text("test")
+    doc$with_transaction(function(txn) text$push(txn, "hello"), mutable = TRUE)
+    sv <- StateVector$decode_v1(as.raw(c(0x00)))
+    update_bytes <- doc$with_transaction(function(txn) txn$encode_diff_v1(sv))
+
+    decoded <- decode(
+      Message$from_sync_message(SyncMessage$new(update = update_bytes))[[encode]]()
+    )
+    expect_s3_class(decoded, "Message")
+    expect_equal(decoded$inner()$step(), "update")
+    expect_gt(length(decoded$inner()$data()), 0L)
+  })
+}

@@ -19,6 +19,12 @@ macro_rules! extendr_struct {
             }
         }
 
+        impl AsMut<$Y> for $T {
+            fn as_mut(&mut self) -> &mut $Y {
+                &mut self.0
+            }
+        }
+
         impl From<$Y> for $T {
             fn from(value: $Y) -> Self {
                 Self(value)

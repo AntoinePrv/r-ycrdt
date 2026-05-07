@@ -1,6 +1,6 @@
 use extendr_api::prelude::*;
 
-use yrs::sync::SyncMessage as YSyncMessage;
+use yrs::sync::{Message as YMessage, SyncMessage as YSyncMessage};
 use yrs::updates::{decoder::Decode as YDecode, encoder::Encode as YEncode};
 
 use crate::type_conversion::IntoExtendr;
@@ -108,7 +108,65 @@ impl SyncMessage {
     }
 }
 
+#[extendr]
+struct Message(Robj);
+
+impl Message {
+    fn from_ymessage(msg: YMessage) -> Result<Self, Error> {
+        match msg {
+            YMessage::Sync(s) => Ok(Self(SyncMessage(s).into_robj())),
+            _ => Err(Error::Other("Support for message".into())),
+        }
+    }
+}
+
+#[extendr]
+impl Message {
+    fn decode_v1(data: &[u8]) -> Result<Self, Error> {
+        match YMessage::decode_v1(data) {
+            Ok(msg) => Self::from_ymessage(msg),
+            Err(err) => Err(Error::Other(err.to_string())),
+        }
+    }
+
+    fn decode_v2(data: &[u8]) -> Result<Self, Error> {
+        match YMessage::decode_v2(data) {
+            Ok(msg) => Self::from_ymessage(msg),
+            Err(err) => Err(Error::Other(err.to_string())),
+        }
+    }
+
+    fn from_sync_message(sync_message: ExternalPtr<SyncMessage>) -> Self {
+        Self(sync_message.into_robj())
+    }
+
+    fn inner(&self) -> Robj {
+        self.0.clone()
+    }
+
+    fn is_sync_message(&self) -> bool {
+        TryInto::<ExternalPtr<SyncMessage>>::try_into(self.0.clone()).is_ok()
+    }
+
+    fn encode_v1(&self) -> Vec<u8> {
+        // Only one variant that we currently store inside a Message.
+        let s = TryInto::<ExternalPtr<SyncMessage>>::try_into(self.0.clone()).unwrap();
+        // YMessage::Sync requires ownership, so we clone the inner YSyncMessage.
+        // To avoid the clone, one could swap a dummy value in, encode, then swap back.
+        YMessage::Sync(s.as_ref().as_ref().clone()).encode_v1()
+    }
+
+    fn encode_v2(&self) -> Vec<u8> {
+        // Only one variant that we currently store inside a Message.
+        let s = TryInto::<ExternalPtr<SyncMessage>>::try_into(self.0.clone()).unwrap();
+        // YMessage::Sync requires ownership, so we clone the inner YSyncMessage.
+        // To avoid the clone, one could swap a dummy value in, encode, then swap back.
+        YMessage::Sync(s.as_ref().as_ref().clone()).encode_v2()
+    }
+}
+
 extendr_module! {
     mod message;
     impl SyncMessage;
+    impl Message;
 }

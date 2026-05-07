@@ -4,6 +4,9 @@ NULL
 #' @export SyncMessage
 NULL
 
+#' @export Message
+NULL
+
 #' @export
 `==.SyncMessage` <- function(e1, e2) {
   e1$equal(e2)

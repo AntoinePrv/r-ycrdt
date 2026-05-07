@@ -19,24 +19,6 @@ impl SyncMessage {
         YSyncMessage::decode_v2(data).extendr().map(From::from)
     }
 
-    fn new(
-        #[extendr(default = "NULL")] sync_step1: Robj,
-        #[extendr(default = "NULL")] sync_step2: Robj,
-        #[extendr(default = "NULL")] update: Robj,
-    ) -> Result<Self, Error> {
-        match (sync_step1.is_null(), sync_step2.is_null(), update.is_null()) {
-            (false, true, true) => {
-                let sv: &StateVector = (&sync_step1).try_into()?;
-                Self::from_sync_step1(sv)
-            }
-            (true, false, true) => Self::from_sync_step2(Raw::try_from(sync_step2)?.as_slice()),
-            (true, true, false) => Self::from_update(Raw::try_from(update)?.as_slice()),
-            _ => Err(Error::Other(
-                "Exactly one of 'sync_step1', 'sync_step2', or 'update' must be provided".into(),
-            )),
-        }
-    }
-
     fn from_sync_step1(state_vector: &StateVector) -> Result<Self, Error> {
         Ok(Self::from(YSyncMessage::SyncStep1(
             state_vector.as_ref().clone(),

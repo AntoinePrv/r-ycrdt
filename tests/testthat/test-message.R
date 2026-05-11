@@ -139,7 +139,9 @@ for (version in c("v1", "v2")) {
     update_bytes <- doc$with_transaction(function(txn) txn$encode_diff_v1(sv))
 
     decoded <- decode(
-      Message$from_sync_message(SyncMessage$from_update(update_bytes))[[encode]]()
+      Message$from_sync_message(SyncMessage$from_update(update_bytes))[[
+        encode
+      ]]()
     )
     expect_s3_class(decoded, "Message")
     expect_equal(decoded$inner()$step(), "update")

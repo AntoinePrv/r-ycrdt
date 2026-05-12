@@ -91,13 +91,24 @@ impl SyncMessage {
 }
 
 #[extendr]
+#[derive(Default)]
+struct Unsupported {}
+
+#[extendr]
+impl Unsupported {
+    fn new() -> Self {
+        Self {}
+    }
+}
+
+#[extendr]
 struct Message(Robj);
 
 impl Message {
-    fn from_ymessage(msg: YMessage) -> Result<Self, Error> {
+    fn from_ymessage(msg: YMessage) -> Self {
         match msg {
-            YMessage::Sync(s) => Ok(Self(SyncMessage(s).into_robj())),
-            _ => Err(Error::Other("Support for message".into())),
+            YMessage::Sync(s) => Self(SyncMessage(s).into_robj()),
+            _ => Self(Unsupported {}.into_robj()),
         }
     }
 }
@@ -105,21 +116,30 @@ impl Message {
 #[extendr]
 impl Message {
     fn decode_v1(data: &[u8]) -> Result<Self, Error> {
-        match YMessage::decode_v1(data) {
-            Ok(msg) => Self::from_ymessage(msg),
-            Err(err) => Err(Error::Other(err.to_string())),
-        }
+        YMessage::decode_v1(data)
+            .map(Self::from_ymessage)
+            .map_err(|err| Error::Other(err.to_string()))
     }
 
     fn decode_v2(data: &[u8]) -> Result<Self, Error> {
-        match YMessage::decode_v2(data) {
-            Ok(msg) => Self::from_ymessage(msg),
-            Err(err) => Err(Error::Other(err.to_string())),
-        }
+        YMessage::decode_v2(data)
+            .map(Self::from_ymessage)
+            .map_err(|err| Error::Other(err.to_string()))
     }
 
-    fn from_sync_message(sync_message: ExternalPtr<SyncMessage>) -> Self {
-        Self(sync_message.into_robj())
+    fn new(obj: Robj) -> Result<Self, Error> {
+        if let Ok(m) = TryInto::<ExternalPtr<SyncMessage>>::try_into(obj.clone()) {
+            Ok(Self(m.into_robj()))
+        } else {
+            let class = obj
+                .class()
+                .map(|c| c.collect::<Vec<_>>().join(", "))
+                .unwrap_or_else(|| "<unknown>".to_string());
+            Err(Error::Other(format!(
+                "Expected a SyncMessage, got object of class [{}]",
+                class
+            )))
+        }
     }
 
     fn inner(&self) -> Robj {
@@ -151,4 +171,5 @@ extendr_module! {
     mod message;
     impl SyncMessage;
     impl Message;
+    impl Unsupported;
 }

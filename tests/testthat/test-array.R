@@ -4,12 +4,54 @@ test_that("Array remove decreases len", {
 
   doc$with_transaction(
     function(trans) {
-      arr$insert_any(trans, 0L, "a")
-      arr$insert_any(trans, 1L, "b")
+      arr$insert(trans, 0L, Prelim$any("a"))
+      arr$insert(trans, 1L, Prelim$any("b"))
       arr$remove(trans, 0L)
 
       expect_equal(arr$len(trans), 1L)
       expect_equal(arr$get(trans, 0L), "b")
+    },
+    mutable = TRUE
+  )
+})
+
+test_that("Array insert with Prelim variants stores usable values", {
+  doc <- Doc$new()
+  arr <- doc$get_or_insert_array("data")
+
+  doc$with_transaction(
+    function(trans) {
+      arr$insert(trans, 0L, Prelim$any("hello"))
+      arr$insert(trans, 1L, Prelim$any(42L))
+      arr$insert(trans, 2L, Prelim$text("hi"))
+      arr$insert(trans, 3L, Prelim$array(list("a", "b")))
+      arr$insert(trans, 4L, Prelim$map(list(a = 1L, b = 2L)))
+      # detect dispatches based on input shape
+      arr$insert(trans, 5L, Prelim$detect(list(x = TRUE)))
+
+      expect_equal(arr$len(trans), 6L)
+      expect_equal(arr$get(trans, 0L), "hello")
+      expect_equal(arr$get(trans, 1L), 42L)
+
+      text <- arr$get(trans, 2L)
+      expect_true(inherits(text, "TextRef"))
+      text$push(trans, "!")
+      expect_equal(text$get_string(trans), "hi!")
+
+      nested_arr <- arr$get(trans, 3L)
+      expect_true(inherits(nested_arr, "ArrayRef"))
+      nested_arr$insert(trans, 2L, Prelim$any("c"))
+      expect_equal(nested_arr$len(trans), 3L)
+      expect_equal(nested_arr$get(trans, 2L), "c")
+
+      nested_map <- arr$get(trans, 4L)
+      expect_true(inherits(nested_map, "MapRef"))
+      expect_equal(nested_map$len(trans), 2L)
+      expect_equal(nested_map$get(trans, "a"), 1L)
+
+      detected_map <- arr$get(trans, 5L)
+      expect_true(inherits(detected_map, "MapRef"))
+      expect_equal(detected_map$get(trans, "x"), TRUE)
     },
     mutable = TRUE
   )

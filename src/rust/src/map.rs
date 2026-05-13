@@ -5,9 +5,9 @@ use yrs::{
     TextPrelim as YTextPrelim,
 };
 
-use crate::event;
 use crate::type_conversion::{FromExtendr, IntoExtendr};
 use crate::utils::{self, lifetime, ExtendrRef};
+use crate::{event, Prelim};
 use crate::{try_read, ArrayRef, ExtendrTransaction, TextRef, Transaction};
 
 utils::extendr_struct!(#[extendr] pub MapRef(yrs::MapRef));
@@ -20,6 +20,20 @@ impl MapRef {
 
     pub fn contains_key(&self, transaction: &Transaction, key: &str) -> Result<bool, Error> {
         try_read!(transaction, t => self.0.contains_key(t, key))
+    }
+
+    pub fn insert(
+        &self,
+        transaction: &mut Transaction,
+        key: &str,
+        prelim: &Prelim,
+    ) -> Result<(), Error> {
+        let map = self.0.clone(); // Cheap ptr copy
+        let key = key.to_string();
+        let value = prelim.to_in()?;
+        transaction.with_write_mut(move |trans| {
+            map.insert(trans, key, value);
+        })
     }
 
     pub fn insert_any(

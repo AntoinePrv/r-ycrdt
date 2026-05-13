@@ -131,14 +131,7 @@ impl Message {
         if let Ok(m) = TryInto::<ExternalPtr<SyncMessage>>::try_into(obj.clone()) {
             Ok(Self(m.into_robj()))
         } else {
-            let class = obj
-                .class()
-                .map(|c| c.collect::<Vec<_>>().join(", "))
-                .unwrap_or_else(|| "<unknown>".to_string());
-            Err(Error::Other(format!(
-                "Expected a SyncMessage, got object of class [{}]",
-                class
-            )))
+            Err(utils::make_type_error(obj, "SyncMessage"))
         }
     }
 

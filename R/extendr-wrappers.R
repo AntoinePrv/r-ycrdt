@@ -67,9 +67,31 @@ Origin$to_hex <- function() .Call(wrap__Origin__to_hex, self)
 #' @export
 `[[.Origin` <- `$.Origin`
 
+Prelim <- new.env(parent = emptyenv())
+
+Prelim$detect <- function(obj) .Call(wrap__Prelim__detect, obj)
+
+Prelim$text <- function(obj) .Call(wrap__Prelim__text, obj)
+
+Prelim$array <- function(obj) .Call(wrap__Prelim__array, obj)
+
+Prelim$map <- function(obj) .Call(wrap__Prelim__map, obj)
+
+Prelim$any <- function(obj) .Call(wrap__Prelim__any, obj)
+
+Prelim$inner <- function() .Call(wrap__Prelim__inner, self)
+
+#' @export
+`$.Prelim` <- function (self, name) { func <- Prelim[[name]]; environment(func) <- environment(); func }
+
+#' @export
+`[[.Prelim` <- `$.Prelim`
+
 ArrayRef <- new.env(parent = emptyenv())
 
 ArrayRef$len <- function(transaction) .Call(wrap__ArrayRef__len, self, transaction)
+
+ArrayRef$insert <- function(transaction, index, prelim) .Call(wrap__ArrayRef__insert, self, transaction, index, prelim)
 
 ArrayRef$insert_any <- function(transaction, index, obj) .Call(wrap__ArrayRef__insert_any, self, transaction, index, obj)
 
@@ -116,6 +138,8 @@ MapRef <- new.env(parent = emptyenv())
 MapRef$len <- function(transaction) .Call(wrap__MapRef__len, self, transaction)
 
 MapRef$contains_key <- function(transaction, key) .Call(wrap__MapRef__contains_key, self, transaction, key)
+
+MapRef$insert <- function(transaction, key, prelim) .Call(wrap__MapRef__insert, self, transaction, key, prelim)
 
 MapRef$insert_any <- function(transaction, key, obj) .Call(wrap__MapRef__insert_any, self, transaction, key, obj)
 

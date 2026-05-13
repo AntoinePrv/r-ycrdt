@@ -1,5 +1,16 @@
 use extendr_api::prelude::*;
 
+pub(crate) fn make_type_error(obj: Robj, expected: &str) -> extendr_api::Error {
+    let class = obj
+        .class()
+        .map(|c| c.collect::<Vec<_>>().join(", "))
+        .unwrap_or_else(|| "<unknown>".to_string());
+    Error::Other(format!(
+        "Expected an object of type {}, got {}",
+        expected, class
+    ))
+}
+
 macro_rules! extendr_struct {
     ($(#[$attr:meta])* $vis:vis $T:ident($Y:ty)) => {
         $(#[$attr])*

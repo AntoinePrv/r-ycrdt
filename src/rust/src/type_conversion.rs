@@ -1,12 +1,15 @@
 use extendr_api::prelude::*;
 use yrs::types::{
-    Attrs as YAttrs, Change as YChange, Delta as YDelta, EntryChange as YEntryChange,
-    PathSegment as YPathSegment,
+    Change as YChange, Delta as YDelta, EntryChange as YEntryChange, PathSegment as YPathSegment,
 };
 use yrs::{block::ID as YID, Any as YAny, Out as YOut};
 
 pub trait IntoExtendr<T> {
     fn extendr(self) -> extendr_api::Result<T>;
+}
+
+pub trait FromExtendr<T>: Sized {
+    fn from_extendr(value: T) -> extendr_api::Result<Self>;
 }
 
 impl<T, E: ToString> IntoExtendr<T> for Result<T, E> {
@@ -78,6 +81,55 @@ where
             values.set_names(keys.as_slice())?;
         }
         Ok(values.into_robj())
+    }
+}
+
+impl<K, V> FromExtendr<Robj> for std::collections::HashMap<K, V>
+where
+    K: std::hash::Hash + Eq + for<'a> From<&'a str>,
+    V: FromExtendr<Robj>,
+{
+    fn from_extendr(robj: Robj) -> extendr_api::Result<Self> {
+        if !robj.is_list() {
+            return Err(Error::Other(format!(
+                "Expected a named list for HashMap, got {:?}",
+                robj.rtype()
+            )));
+        }
+        let list = robj.as_list().unwrap();
+        if list.is_empty() {
+            return Ok(Self::default());
+        }
+        let fully_named = list
+            .names()
+            .map(|mut ns| ns.all(|n| !n.is_empty()))
+            .unwrap_or(false);
+        if !fully_named {
+            return Err(Error::Other(
+                "Expected a fully named list for HashMap".to_string(),
+            ));
+        }
+        list.names()
+            .unwrap()
+            .zip(list.values())
+            .map(|(k, v)| Ok((K::from(k), V::from_extendr(v)?)))
+            .collect()
+    }
+}
+
+impl FromExtendr<&Strings> for String {
+    fn from_extendr(value: &Strings) -> extendr_api::Result<Self> {
+        if value.len() != 1 {
+            return Err(Error::Other(format!(
+                "Expected a length-1 character vector, got length {}",
+                value.len()
+            )));
+        }
+        let s = value.elt(0);
+        if s.is_na() {
+            return Err(Error::Other("Expected a non-NA string".to_string()));
+        }
+        Ok(s.to_string())
     }
 }
 
@@ -248,10 +300,6 @@ impl IntoExtendr<Robj> for &YChange {
     }
 }
 
-pub trait FromExtendr<T>: Sized {
-    fn from_extendr(value: T) -> extendr_api::Result<Self>;
-}
-
 impl FromExtendr<Robj> for YAny {
     fn from_extendr(robj: Robj) -> extendr_api::Result<Self> {
         if robj.is_null() {
@@ -267,8 +315,7 @@ impl FromExtendr<Robj> for YAny {
         } else if robj.is_raw() {
             let raw = Raw::try_from(robj).unwrap();
             Ok(YAny::Buffer(std::sync::Arc::from(raw.as_slice())))
-        } else if robj.is_list() {
-            let list = robj.as_list().unwrap();
+        } else if let Some(list) = robj.as_list() {
             if robj.names().is_some() {
                 let map = std::collections::HashMap::<String, Robj>::try_from(list)
                     .unwrap()
@@ -292,41 +339,12 @@ impl FromExtendr<Robj> for YAny {
     }
 }
 
-impl FromExtendr<Robj> for YAttrs {
-    fn from_extendr(robj: Robj) -> extendr_api::Result<Self> {
-        if !robj.is_list() {
-            return Err(Error::Other(format!(
-                "Expected a named list for Attrs, got {:?}",
-                robj.rtype()
-            )));
-        }
-        let list = robj.as_list().unwrap();
-        if list.is_empty() {
-            return Ok(Self::default());
-        }
-        // In R, a partially named list has names() return Some but with empty
-        // strings for unnamed elements.
-        let fully_named = list
-            .names()
-            .map(|mut ns| ns.all(|n| !n.is_empty()))
-            .unwrap_or(false);
-        if !fully_named {
-            return Err(Error::Other(
-                "Expected a fully named list for Attrs".to_string(),
-            ));
-        }
-        list.names()
-            .unwrap()
-            .zip(list.values())
-            .map(|(k, v)| Ok((std::sync::Arc::from(k), YAny::from_extendr(v)?)))
-            .collect()
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;
     use std::sync::Arc;
+
+    use yrs::types::Attrs as YAttrs;
 
     use super::*;
 
@@ -665,6 +683,14 @@ mod tests {
     }
 
     #[test]
+    fn test_from_strings() {
+        extendr_api::test! {
+            assert_eq!(String::from_extendr(&Strings::from_values(["hello"])).unwrap(), "hello");
+            assert!(String::from_extendr(&Strings::from_values(["a", "b"])).is_err());
+        }
+    }
+
+    #[test]
     fn test_from_any_buffer() {
         extendr_api::test! {
             let robj: Robj = Raw::from_bytes(&[1, 2, 3]).into();
@@ -683,6 +709,16 @@ mod tests {
     fn test_from_any_map() {
         extendr_api::test! {
             assert!(matches!(YAny::from_extendr(R!(r#"list(x=1.5)"#).unwrap()).unwrap(), YAny::Map(ref m) if m.len() == 1));
+        }
+    }
+
+    #[test]
+    fn test_from_hashmap() {
+        extendr_api::test! {
+            let map = HashMap::<String, YAny>::from_extendr(R!(r#"list(x=1.5, y=TRUE)"#).unwrap()).unwrap();
+            assert_eq!(map.len(), 2);
+            assert!(matches!(map.get("x"), Some(YAny::Number(v)) if *v == 1.5));
+            assert!(HashMap::<String, YAny>::from_extendr(R!(r#"list(1.5)"#).unwrap()).is_err());
         }
     }
 

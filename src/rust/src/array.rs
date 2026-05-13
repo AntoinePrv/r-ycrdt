@@ -5,9 +5,9 @@ use yrs::{
     TextPrelim as YTextPrelim,
 };
 
-use crate::event;
 use crate::type_conversion::{FromExtendr, IntoExtendr};
 use crate::utils::{self, lifetime, ExtendrRef};
+use crate::{event, Prelim};
 use crate::{try_read, ExtendrTransaction, MapRef, TextRef, Transaction};
 
 utils::extendr_struct!(#[extendr] pub ArrayRef(yrs::ArrayRef));
@@ -16,6 +16,19 @@ utils::extendr_struct!(#[extendr] pub ArrayRef(yrs::ArrayRef));
 impl ArrayRef {
     pub fn len(&self, transaction: &Transaction) -> Result<u32, Error> {
         try_read!(transaction, t => self.0.len(t))
+    }
+
+    pub fn insert(
+        &self,
+        transaction: &mut Transaction,
+        index: u32,
+        prelim: &Prelim,
+    ) -> Result<(), Error> {
+        let array = self.0.clone(); // Cheap ptr copy
+        let input = prelim.to_in()?;
+        transaction.with_write_mut(move |trans| {
+            array.insert(trans, index, input);
+        })
     }
 
     pub fn insert_any(

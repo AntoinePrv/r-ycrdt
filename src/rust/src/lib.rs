@@ -13,8 +13,9 @@ pub(crate) mod utils;
 
 pub use crate::type_conversion::{FromExtendr, IntoExtendr};
 pub use crate::{
-    array::ArrayRef, doc::Doc, map::MapRef, state::DeleteSet, state::Snapshot, state::StateVector,
-    text::TextRef, transaction::Origin, transaction::Transaction, update::Update, prelim::Prelim
+    array::ArrayRef, doc::Doc, map::MapRef, prelim::Prelim, state::DeleteSet, state::Snapshot,
+    state::StateVector, text::TextRef, transaction::Origin, transaction::Transaction,
+    update::Update,
 };
 pub(crate) use transaction::try_read;
 pub(crate) use transaction::ExtendrTransaction;

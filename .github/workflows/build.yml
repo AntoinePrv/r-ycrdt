@@ -49,3 +49,9 @@ jobs:
         run: pixi run test-cargo
       - name: R integration tests
         run: pixi run test-r
+      # The sccache server (RUSTC_WRAPPER) keeps running after the build and
+      # locks .pixi/envs/dev/bin, making setup-pixi's post-job cleanup fail
+      # with `EBUSY: resource busy or locked, rmdir`. Stop it explicitly.
+      - name: Stop sccache server
+        if: always() && runner.os == 'Windows'
+        run: pixi run -e dev sccache --stop-server

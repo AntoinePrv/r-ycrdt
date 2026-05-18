@@ -1,7 +1,10 @@
-TARGET = $(subst 64,x86_64,$(subst 32,i686,$(WIN)))-pc-windows-gnu
-
+# TARGET is configured by tools/config.R (@TARGET_TRIPLE@), honoring
+# CARGO_BUILD_TARGET with a fallback to the standard Rtools GNU triple.
+TARGET = @TARGET_TRIPLE@
 TARGET_DIR = ./rust/target
-LIBDIR = $(TARGET_DIR)/$(TARGET)/@LIBDIR@
+# @LIBDIR@ already encodes <triple>/<profile> (same handling as src/Makevars.in),
+# kept consistent with the $(TARGET) cargo cross-compiles to below.
+LIBDIR = $(TARGET_DIR)/@LIBDIR@
 STATLIB = $(LIBDIR)/libyr.a
 PKG_LIBS = -L$(LIBDIR) -lyr -lws2_32 -ladvapi32 -luserenv -lbcrypt -lntdll
 

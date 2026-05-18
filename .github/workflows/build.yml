@@ -31,17 +31,28 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-24.04, ubuntu-24.04-arm, macos-26-intel, macos-26]
+        os: [ubuntu-24.04, ubuntu-24.04-arm, macos-26-intel, macos-26, windows-2025]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
       - name: Setup Pixi
-        uses: prefix-dev/setup-pixi@v0.9.4
+        uses: prefix-dev/setup-pixi@v0.9.5
         with:
-          pixi-version: v0.65.0
+          pixi-version: v0.66.0
           cache: true
+          cache-write: ${{ github.event_name == "push" && github.ref_name == "main" }}
           environments: dev
+      - name: Set Windows link flags for R
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: echo "RUSTFLAGS=-L native=$env:CONDA_PREFIX/lib/R/bin/x64 -l R" >> $env:GITHUB_ENV
       - name: Unit tests
         run: pixi run test-cargo
       - name: R integration tests
         run: pixi run test-r
+      # The sccache server (RUSTC_WRAPPER) keeps running after the build and
+      # locks .pixi/envs/dev/bin, making setup-pixi's post-job cleanup fail
+      # with `EBUSY: resource busy or locked, rmdir`. Stop it explicitly.
+      - name: Stop sccache server
+        if: always() && runner.os == 'Windows'
+        run: pixi run -e dev sccache --stop-server

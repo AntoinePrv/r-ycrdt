@@ -50,15 +50,25 @@ if (is_wasm) {
   cargo_build_target <- webr_target
 }
 
-# We have an explicit target
-if (nchar(cargo_build_target) > 0) {
-  # Add cargo target to expected subfolder output of cargo target dir
-  target_libpath <- cargo_build_target
-  # Used this to replace @TARGET@
-  .target <- paste0("--target=", cargo_build_target)
+# Cross-compilation target triple. Honors CARGO_BUILD_TARGET.
+# Windows additionally falls back to the standard Rtools GNU triple for R compat.
+.target_triple <- if (nchar(cargo_build_target) > 0) {
+  cargo_build_target
+} else if (.Platform[["OS.type"]] == "windows") {
+  "x86_64-pc-windows-gnu"
 } else {
-  target_libpath <- NULL
-  .target <- ""
+  ""
+}
+
+# Whenever a target triple is in effect it appears in cargo target dir.
+target_libpath <- if (nchar(.target_triple) > 0) .target_triple else NULL
+
+# Used to replace @TARGET@ in the Unix Makevars. Only emitted when a CARGO
+# target was explicitly requested; the Windows Makevars uses $(TARGET) instead.
+.target <- if (nchar(cargo_build_target) > 0) {
+  paste0("--target=", cargo_build_target)
+} else {
+  ""
 }
 
 # Check if we are making a debug build or not if so, the LIBDIR environment
@@ -112,6 +122,7 @@ new_txt <- gsub("@CRAN_FLAGS@", .cran_flags, mv_txt) |>
   gsub("@CLEAN_TARGET@", .clean_targets, x = _) |>
   gsub("@LIBDIR@", .libdir, x = _) |>
   gsub("@TARGET@", .target, x = _) |>
+  gsub("@TARGET_TRIPLE@", .target_triple, x = _) |>
   gsub("@SKIP_WRAPPERS@", .skip_build_wrappers, x = _) |>
   gsub("@PANIC_EXPORTS@", .panic_exports, x = _)
 

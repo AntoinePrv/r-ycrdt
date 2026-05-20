@@ -9,8 +9,8 @@ use crate::utils;
 
 #[derive(Clone)]
 pub enum PrelimType {
-    Map(List),
-    Array(List),
+    Map(List, bool),
+    Array(List, bool),
     Text(Strings),
     Any(Robj),
 }
@@ -18,8 +18,8 @@ pub enum PrelimType {
 impl IntoRobj for PrelimType {
     fn into_robj(self) -> Robj {
         match self {
-            Self::Map(list) => list.into_robj(),
-            Self::Array(list) => list.into_robj(),
+            Self::Map(list, _) => list.into_robj(),
+            Self::Array(list, _) => list.into_robj(),
             Self::Text(str) => str.into_robj(),
             Self::Any(obj) => obj,
         }
@@ -39,24 +39,28 @@ impl Prelim {
             .map(Into::into)
     }
 
-    fn in_from_array(list: List) -> Result<YIn, Error> {
+    fn in_from_array(list: List, recursive: bool) -> Result<YIn, Error> {
         let mut out = YArrayPrelim::default();
         out.reserve(list.len());
         for obj in list.as_slice().iter() {
-            // Not recursive, user must explicitly use Prelim internally
-            // for nested CRDTs
-            out.push(YAny::from_extendr(obj.clone())?.into());
+            if recursive {
+                out.push(Self::detect(obj.clone(), recursive).to_in()?);
+            } else {
+                out.push(YAny::from_extendr(obj.clone())?.into());
+            }
         }
         Ok(out.into())
     }
 
-    fn in_from_map(map: List) -> Result<YIn, Error> {
+    fn in_from_map(map: List, recursive: bool) -> Result<YIn, Error> {
         let mut out = YMapPrelim::default();
         out.reserve(map.len());
         for (name, obj) in map.iter() {
-            // Not recursive, user must explicitly use Prelim internally
-            // for nested CRDTs
-            out.insert(name.into(), YAny::from_extendr(obj.clone())?.into());
+            if recursive {
+                out.insert(name.into(), Self::detect(obj.clone(), recursive).to_in()?);
+            } else {
+                out.insert(name.into(), YAny::from_extendr(obj.clone())?.into());
+            }
         }
         Ok(out.into())
     }
@@ -67,17 +71,17 @@ impl Prelim {
 
     pub fn to_in(&self) -> Result<YIn, Error> {
         match self.as_ref() {
-            PrelimType::Text(str) => Self::in_from_text(str.clone()),
-            PrelimType::Map(list) => Self::in_from_map(list.clone()),
-            PrelimType::Array(list) => Self::in_from_array(list.clone()),
             PrelimType::Any(obj) => Self::in_from_any(obj.clone()),
+            PrelimType::Text(str) => Self::in_from_text(str.clone()),
+            PrelimType::Map(list, recursive) => Self::in_from_map(list.clone(), *recursive),
+            PrelimType::Array(list, recursive) => Self::in_from_array(list.clone(), *recursive),
         }
     }
 }
 
 #[extendr]
 impl Prelim {
-    fn detect(obj: Robj) -> Self {
+    fn detect(obj: Robj, #[extendr(default = "FALSE")] recursive: bool) -> Self {
         if let Ok(prelim) = TryInto::<&Prelim>::try_into(&obj) {
             prelim.as_ref().clone().into()
         } else if let Ok(str) = TryInto::<Strings>::try_into(obj.clone()) {
@@ -85,9 +89,9 @@ impl Prelim {
         } else {
             if let Some(list) = obj.as_list() {
                 if list.has_names() {
-                    Self::map(list)
+                    Self::map(list, recursive)
                 } else {
-                    Self::array(list)
+                    Self::array(list, recursive)
                 }
             } else {
                 Self::any(obj)
@@ -99,12 +103,12 @@ impl Prelim {
         PrelimType::Text(obj).into()
     }
 
-    fn array(obj: List) -> Self {
-        PrelimType::Array(obj).into()
+    fn array(obj: List, #[extendr(default = "FALSE")] recursive: bool) -> Self {
+        PrelimType::Array(obj, recursive).into()
     }
 
-    fn map(obj: List) -> Self {
-        PrelimType::Map(obj).into()
+    fn map(obj: List, #[extendr(default = "FALSE")] recursive: bool) -> Self {
+        PrelimType::Map(obj, recursive).into()
     }
 
     fn any(obj: Robj) -> Self {

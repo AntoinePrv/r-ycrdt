@@ -221,3 +221,60 @@ test_that("Unobserving one nested type does not affect sibling observers", {
     list(list(retain = 1L), list(added = list(2L)))
   )
 })
+
+test_that("Prelim mix of recursive and explicit non-recursive nested prelims", {
+  doc <- Doc$new()
+  root <- doc$get_or_insert_map("root")
+
+  doc$with_transaction(
+    function(trans) {
+      # Outer map is recursive: bare nested list is auto-detected as a Map,
+      # while explicit Prelim values are used as-is. The non-recursive
+      # explicit_array contains a nested list which resolves to a YAny
+      # (plain R list), not a nested ArrayRef.
+      root$insert(
+        trans,
+        "mix",
+        Prelim$map(
+          list(
+            auto_nested = list(x = 1L, y = 2L),
+            explicit_text = Prelim$text("hello"),
+            explicit_array = Prelim$array(
+              list("a", list(inner = 1L, deep = list(2L, 3L))),
+              recursive = FALSE
+            )
+          ),
+          recursive = TRUE
+        )
+      )
+
+      mix <- root$get(trans, "mix")
+      expect_true(inherits(mix, "MapRef"))
+
+      auto_nested <- mix$get(trans, "auto_nested")
+      expect_true(inherits(auto_nested, "MapRef"))
+      expect_equal(auto_nested$get(trans, "x"), 1L)
+      expect_equal(auto_nested$get(trans, "y"), 2L)
+
+      explicit_text <- mix$get(trans, "explicit_text")
+      expect_true(inherits(explicit_text, "TextRef"))
+      expect_equal(explicit_text$get_string(trans), "hello")
+
+      explicit_array <- mix$get(trans, "explicit_array")
+      expect_true(inherits(explicit_array, "ArrayRef"))
+      expect_equal(explicit_array$len(trans), 2L)
+      expect_equal(explicit_array$get(trans, 0L), "a")
+      # Nested list inside non-recursive prelim resolves to a plain R list,
+      # not a nested CRDT ref.
+      any_inner <- explicit_array$get(trans, 1L)
+      expect_false(inherits(any_inner, "MapRef"))
+      expect_false(inherits(any_inner, "ArrayRef"))
+      # YAny::Map is unordered, so compare by sorted names.
+      expect_equal(
+        any_inner[sort(names(any_inner))],
+        list(deep = list(2L, 3L), inner = 1L)
+      )
+    },
+    mutable = TRUE
+  )
+})

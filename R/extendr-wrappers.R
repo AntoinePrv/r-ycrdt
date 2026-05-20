@@ -69,13 +69,13 @@ Origin$to_hex <- function() .Call(wrap__Origin__to_hex, self)
 
 Prelim <- new.env(parent = emptyenv())
 
-Prelim$detect <- function(obj) .Call(wrap__Prelim__detect, obj)
+Prelim$detect <- function(obj, recursive = FALSE) .Call(wrap__Prelim__detect, obj, recursive)
 
 Prelim$text <- function(obj) .Call(wrap__Prelim__text, obj)
 
-Prelim$array <- function(obj) .Call(wrap__Prelim__array, obj)
+Prelim$array <- function(obj, recursive = FALSE) .Call(wrap__Prelim__array, obj, recursive)
 
-Prelim$map <- function(obj) .Call(wrap__Prelim__map, obj)
+Prelim$map <- function(obj, recursive = FALSE) .Call(wrap__Prelim__map, obj, recursive)
 
 Prelim$any <- function(obj) .Call(wrap__Prelim__any, obj)
 

@@ -226,27 +226,41 @@ test_that("Prelim mix of recursive and explicit non-recursive nested prelims", {
   doc <- Doc$new()
   root <- doc$get_or_insert_map("root")
 
+  explicit_text <- Prelim$text("hello")
+  expect_true(explicit_text$is_text())
+  expect_false(explicit_text$is_array())
+  expect_false(explicit_text$is_map())
+  expect_false(explicit_text$is_any())
+  expect_false(explicit_text$is_recursive())
+
+  explicit_array <- Prelim$array(
+    list("a", list(inner = 1L, deep = list(2L, 3L))),
+    recursive = FALSE
+  )
+  expect_true(explicit_array$is_array())
+  expect_false(explicit_array$is_map())
+  expect_false(explicit_array$is_recursive())
+
+  outer <- Prelim$map(
+    list(
+      auto_nested = list(x = 1L, y = 2L),
+      explicit_text = explicit_text,
+      explicit_array = explicit_array
+    ),
+    recursive = TRUE
+  )
+  expect_true(outer$is_map())
+  expect_false(outer$is_array())
+  expect_false(outer$is_any())
+  expect_true(outer$is_recursive())
+
   doc$with_transaction(
     function(trans) {
       # Outer map is recursive: bare nested list is auto-detected as a Map,
       # while explicit Prelim values are used as-is. The non-recursive
       # explicit_array contains a nested list which resolves to a YAny
       # (plain R list), not a nested ArrayRef.
-      root$insert(
-        trans,
-        "mix",
-        Prelim$map(
-          list(
-            auto_nested = list(x = 1L, y = 2L),
-            explicit_text = Prelim$text("hello"),
-            explicit_array = Prelim$array(
-              list("a", list(inner = 1L, deep = list(2L, 3L))),
-              recursive = FALSE
-            )
-          ),
-          recursive = TRUE
-        )
-      )
+      root$insert(trans, "mix", outer)
 
       mix <- root$get(trans, "mix")
       expect_true(inherits(mix, "MapRef"))

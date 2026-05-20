@@ -7,10 +7,15 @@ use yrs::{
 use crate::type_conversion::FromExtendr;
 use crate::utils;
 
+#[derive(Clone, Copy)]
+pub struct PrelimTypeOptions {
+    recursive: bool,
+}
+
 #[derive(Clone)]
 pub enum PrelimType {
-    Map(List, bool),
-    Array(List, bool),
+    Map(List, PrelimTypeOptions),
+    Array(List, PrelimTypeOptions),
     Text(Strings),
     Any(Robj),
 }
@@ -39,12 +44,12 @@ impl Prelim {
             .map(Into::into)
     }
 
-    fn in_from_array(list: List, recursive: bool) -> Result<YIn, Error> {
+    fn in_from_array(list: List, opts: PrelimTypeOptions) -> Result<YIn, Error> {
         let mut out = YArrayPrelim::default();
         out.reserve(list.len());
         for obj in list.as_slice().iter() {
-            if recursive {
-                out.push(Self::detect(obj.clone(), recursive).to_in()?);
+            if opts.recursive {
+                out.push(Self::detect(obj.clone(), opts.recursive).to_in()?);
             } else {
                 out.push(YAny::from_extendr(obj.clone())?.into());
             }
@@ -52,12 +57,15 @@ impl Prelim {
         Ok(out.into())
     }
 
-    fn in_from_map(map: List, recursive: bool) -> Result<YIn, Error> {
+    fn in_from_map(map: List, opts: PrelimTypeOptions) -> Result<YIn, Error> {
         let mut out = YMapPrelim::default();
         out.reserve(map.len());
         for (name, obj) in map.iter() {
-            if recursive {
-                out.insert(name.into(), Self::detect(obj.clone(), recursive).to_in()?);
+            if opts.recursive {
+                out.insert(
+                    name.into(),
+                    Self::detect(obj.clone(), opts.recursive).to_in()?,
+                );
             } else {
                 out.insert(name.into(), YAny::from_extendr(obj.clone())?.into());
             }
@@ -73,8 +81,8 @@ impl Prelim {
         match self.as_ref() {
             PrelimType::Any(obj) => Self::in_from_any(obj.clone()),
             PrelimType::Text(str) => Self::in_from_text(str.clone()),
-            PrelimType::Map(list, recursive) => Self::in_from_map(list.clone(), *recursive),
-            PrelimType::Array(list, recursive) => Self::in_from_array(list.clone(), *recursive),
+            PrelimType::Map(list, opts) => Self::in_from_map(list.clone(), *opts),
+            PrelimType::Array(list, opts) => Self::in_from_array(list.clone(), *opts),
         }
     }
 }
@@ -104,11 +112,11 @@ impl Prelim {
     }
 
     fn array(obj: List, #[extendr(default = "FALSE")] recursive: bool) -> Self {
-        PrelimType::Array(obj, recursive).into()
+        PrelimType::Array(obj, PrelimTypeOptions { recursive }).into()
     }
 
     fn map(obj: List, #[extendr(default = "FALSE")] recursive: bool) -> Self {
-        PrelimType::Map(obj, recursive).into()
+        PrelimType::Map(obj, PrelimTypeOptions { recursive }).into()
     }
 
     fn any(obj: Robj) -> Self {
@@ -117,6 +125,31 @@ impl Prelim {
 
     fn inner(&self) -> Robj {
         self.clone().into_robj()
+    }
+
+    pub fn is_text(&self) -> bool {
+        matches!(self.as_ref(), PrelimType::Text(_))
+    }
+
+    pub fn is_array(&self) -> bool {
+        matches!(self.as_ref(), PrelimType::Array(_, _))
+    }
+
+    pub fn is_map(&self) -> bool {
+        matches!(self.as_ref(), PrelimType::Map(_, _))
+    }
+
+    pub fn is_any(&self) -> bool {
+        matches!(self.as_ref(), PrelimType::Any(_))
+    }
+
+    pub fn is_recursive(&self) -> bool {
+        match self.as_ref() {
+            PrelimType::Any(_) => false,
+            PrelimType::Text(_) => false,
+            PrelimType::Map(_, opts) => opts.recursive,
+            PrelimType::Array(_, opts) => opts.recursive,
+        }
     }
 }
 

@@ -81,6 +81,16 @@ Prelim$any <- function(obj) .Call(wrap__Prelim__any, obj)
 
 Prelim$inner <- function() .Call(wrap__Prelim__inner, self)
 
+Prelim$is_text <- function() .Call(wrap__Prelim__is_text, self)
+
+Prelim$is_array <- function() .Call(wrap__Prelim__is_array, self)
+
+Prelim$is_map <- function() .Call(wrap__Prelim__is_map, self)
+
+Prelim$is_any <- function() .Call(wrap__Prelim__is_any, self)
+
+Prelim$is_recursive <- function() .Call(wrap__Prelim__is_recursive, self)
+
 #' @export
 `$.Prelim` <- function (self, name) { func <- Prelim[[name]]; environment(func) <- environment(); func }
 

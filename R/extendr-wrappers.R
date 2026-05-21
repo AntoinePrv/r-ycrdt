@@ -71,11 +71,11 @@ Prelim <- new.env(parent = emptyenv())
 
 Prelim$detect <- function(obj, recursive = FALSE) .Call(wrap__Prelim__detect, obj, recursive)
 
-Prelim$text <- function(obj) .Call(wrap__Prelim__text, obj)
+Prelim$text <- function(obj = "") .Call(wrap__Prelim__text, obj)
 
-Prelim$array <- function(obj, recursive = FALSE) .Call(wrap__Prelim__array, obj, recursive)
+Prelim$array <- function(obj = NULL, recursive = FALSE) .Call(wrap__Prelim__array, obj, recursive)
 
-Prelim$map <- function(obj, recursive = FALSE) .Call(wrap__Prelim__map, obj, recursive)
+Prelim$map <- function(obj = NULL, recursive = FALSE) .Call(wrap__Prelim__map, obj, recursive)
 
 Prelim$any <- function(obj) .Call(wrap__Prelim__any, obj)
 

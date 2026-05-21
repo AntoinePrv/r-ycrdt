@@ -46,6 +46,9 @@ impl Prelim {
 
     fn in_from_array(list: List, opts: PrelimTypeOptions) -> Result<YIn, Error> {
         let mut out = YArrayPrelim::default();
+        if list.is_null() {
+            return Ok(out.into());
+        }
         out.reserve(list.len());
         for obj in list.as_slice().iter() {
             if opts.recursive {
@@ -59,6 +62,9 @@ impl Prelim {
 
     fn in_from_map(map: List, opts: PrelimTypeOptions) -> Result<YIn, Error> {
         let mut out = YMapPrelim::default();
+        if map.is_null() {
+            return Ok(out.into());
+        }
         out.reserve(map.len());
         for (name, obj) in map.iter() {
             if opts.recursive {
@@ -107,15 +113,21 @@ impl Prelim {
         }
     }
 
-    fn text(obj: Strings) -> Self {
+    fn text(#[extendr(default = r#""""#)] obj: Strings) -> Self {
         PrelimType::Text(obj).into()
     }
 
-    fn array(obj: List, #[extendr(default = "FALSE")] recursive: bool) -> Self {
+    fn array(
+        #[extendr(default = "NULL")] obj: List,
+        #[extendr(default = "FALSE")] recursive: bool,
+    ) -> Self {
         PrelimType::Array(obj, PrelimTypeOptions { recursive }).into()
     }
 
-    fn map(obj: List, #[extendr(default = "FALSE")] recursive: bool) -> Self {
+    fn map(
+        #[extendr(default = "NULL")] obj: List,
+        #[extendr(default = "FALSE")] recursive: bool,
+    ) -> Self {
         PrelimType::Map(obj, PrelimTypeOptions { recursive }).into()
     }
 

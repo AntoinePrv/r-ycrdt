@@ -19,6 +19,7 @@ Collate:
     'doc.R'
     'map.R'
     'message.R'
+    'prelim.R'
     'state.R'
     'text.R'
     'transaction.R'

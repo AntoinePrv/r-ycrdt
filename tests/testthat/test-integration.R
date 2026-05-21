@@ -54,7 +54,7 @@ for (version in c("v1", "v2")) {
 ####################
 
 test_that("Observers fire only on the directly modified type with correct events", {
-  doc <- Doc$new()
+  doc <- yr::Doc$new()
   root <- doc$get_or_insert_map("root")
 
   # Build nested structure:
@@ -157,7 +157,7 @@ test_that("Observers fire only on the directly modified type with correct events
 })
 
 test_that("Unobserving one nested type does not affect sibling observers", {
-  doc <- Doc$new()
+  doc <- yr::Doc$new()
   root <- doc$get_or_insert_map("root")
 
   text <- NULL
@@ -223,17 +223,17 @@ test_that("Unobserving one nested type does not affect sibling observers", {
 })
 
 test_that("Prelim mix of recursive and explicit non-recursive nested prelims", {
-  doc <- Doc$new()
+  doc <- yr::Doc$new()
   root <- doc$get_or_insert_map("root")
 
-  explicit_text <- Prelim$text("hello")
+  explicit_text <- yr::Prelim$text("hello")
   expect_true(explicit_text$is_text())
   expect_false(explicit_text$is_array())
   expect_false(explicit_text$is_map())
   expect_false(explicit_text$is_any())
   expect_false(explicit_text$is_recursive())
 
-  explicit_array <- Prelim$array(
+  explicit_array <- yr::Prelim$array(
     list("a", list(inner = 1L, deep = list(2L, 3L))),
     recursive = FALSE
   )
@@ -241,7 +241,7 @@ test_that("Prelim mix of recursive and explicit non-recursive nested prelims", {
   expect_false(explicit_array$is_map())
   expect_false(explicit_array$is_recursive())
 
-  outer <- Prelim$map(
+  outer <- yr::Prelim$map(
     list(
       auto_nested = list(x = 1L, y = 2L),
       explicit_text = explicit_text,

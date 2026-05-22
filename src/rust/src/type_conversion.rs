@@ -307,7 +307,11 @@ impl FromExtendr<Robj> for YAny {
         } else if let Some(v) = robj.as_bool() {
             Ok(YAny::Bool(v))
         } else if let Some(v) = robj.as_integer() {
-            Ok(YAny::BigInt(v as i64))
+            // Encode integers as `Number` (JS-safe double) rather than `BigInt`,
+            // mirroring pycrdt: a `BigInt` round-trips to JS as a `BigInt`, which
+            // breaks peers expecting a `number`.
+            // R's `integer` is i32, so it always fits exactly in an f64 (well within 2^53 - 1).
+            Ok(YAny::Number(v as f64))
         } else if let Some(v) = robj.as_real() {
             Ok(YAny::Number(v))
         } else if let Some(v) = robj.as_str() {
@@ -664,7 +668,8 @@ mod tests {
     #[test]
     fn test_from_any_integer() {
         extendr_api::test! {
-            assert!(matches!(YAny::from_extendr(r!(42i32)).unwrap(), YAny::BigInt(42)));
+            // R integers encode as JS-safe `Number`, not `BigInt`.
+            assert!(matches!(YAny::from_extendr(r!(42i32)).unwrap(), YAny::Number(v) if v == 42.0));
         }
     }
 

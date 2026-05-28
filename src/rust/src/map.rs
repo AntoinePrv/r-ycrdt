@@ -14,15 +14,15 @@ utils::extendr_struct!(#[extendr] pub MapRef(yrs::MapRef));
 
 #[extendr]
 impl MapRef {
-    pub fn len(&self, transaction: &Transaction) -> Result<u32, Error> {
+    pub fn len_ec(&self, transaction: &Transaction) -> Result<u32, Error> {
         try_read!(transaction, t => self.0.len(t))
     }
 
-    pub fn contains_key(&self, transaction: &Transaction, key: &str) -> Result<bool, Error> {
+    pub fn contains_key_ec(&self, transaction: &Transaction, key: &str) -> Result<bool, Error> {
         try_read!(transaction, t => self.0.contains_key(t, key))
     }
 
-    pub fn insert(
+    pub fn insert_ec(
         &self,
         transaction: &mut Transaction,
         key: &str,
@@ -36,7 +36,7 @@ impl MapRef {
         })
     }
 
-    pub fn insert_any(
+    pub fn insert_any_ec(
         &self,
         transaction: &mut Transaction,
         key: &str,
@@ -50,7 +50,11 @@ impl MapRef {
         })
     }
 
-    pub fn insert_text(&self, transaction: &mut Transaction, key: &str) -> Result<TextRef, Error> {
+    pub fn insert_text_ec(
+        &self,
+        transaction: &mut Transaction,
+        key: &str,
+    ) -> Result<TextRef, Error> {
         let map = self.0.clone(); // Cheap ptr copy
         let key = key.to_string();
         transaction.with_write_mut(move |trans| {
@@ -58,7 +62,7 @@ impl MapRef {
         })
     }
 
-    pub fn insert_array(
+    pub fn insert_array_ec(
         &self,
         transaction: &mut Transaction,
         key: &str,
@@ -70,7 +74,7 @@ impl MapRef {
         })
     }
 
-    pub fn insert_map(&self, transaction: &mut Transaction, key: &str) -> Result<MapRef, Error> {
+    pub fn insert_map_ec(&self, transaction: &mut Transaction, key: &str) -> Result<MapRef, Error> {
         let map = self.0.clone(); // Cheap ptr copy
         let key = key.to_string();
         transaction.with_write_mut(move |trans| {
@@ -78,15 +82,15 @@ impl MapRef {
         })
     }
 
-    pub fn get(&self, transaction: &mut Transaction, key: &str) -> Result<Robj, Error> {
+    pub fn get_ec(&self, transaction: &mut Transaction, key: &str) -> Result<Robj, Error> {
         try_read!(transaction, t => self.0.get(t, key).as_ref().extendr()).and_then(|r| r)
     }
 
-    pub fn keys(&self, transaction: &mut Transaction) -> Result<Strings, Error> {
+    pub fn keys_ec(&self, transaction: &mut Transaction) -> Result<Strings, Error> {
         try_read!(transaction, t => Strings::from_iter(self.0.keys(t)))
     }
 
-    pub fn items(&self, transaction: &mut Transaction) -> Result<List, Error> {
+    pub fn items_ec(&self, transaction: &mut Transaction) -> Result<List, Error> {
         try_read!(transaction, t => {
             let n = self.0.len(t) as usize;
             let mut keys = Strings::new(n);
@@ -103,7 +107,7 @@ impl MapRef {
         .and_then(|r| r)
     }
 
-    pub fn remove(&self, transaction: &mut Transaction, key: &str) -> Result<(), Error> {
+    pub fn remove_ec(&self, transaction: &mut Transaction, key: &str) -> Result<(), Error> {
         let map = self.0.clone(); // Cheap ptr copy
         let key = key.to_string();
         transaction.with_write_mut(move |trans| {
@@ -111,17 +115,17 @@ impl MapRef {
         })
     }
 
-    pub fn clear(&self, transaction: &mut Transaction) -> Result<(), Error> {
+    pub fn clear_ec(&self, transaction: &mut Transaction) -> Result<(), Error> {
         let map = self.0.clone(); // Cheap ptr copy
         transaction.with_write_mut(move |trans| map.clear(trans))
     }
 
-    pub fn observe(&self, f: Function, key: &Robj) -> Result<(), Error> {
+    pub fn observe_ec(&self, f: Function, key: &Robj) -> Result<(), Error> {
         event::observe_with!(self.as_ref(), observe_with, MapEvent, f, key);
         Ok(())
     }
 
-    pub fn unobserve(&self, key: &Robj) -> Result<(), Error> {
+    pub fn unobserve_ec(&self, key: &Robj) -> Result<(), Error> {
         event::unobserve_with!(self.as_ref(), unobserve, key);
         Ok(())
     }
@@ -131,12 +135,12 @@ utils::extendr_struct!(#[extendr] pub MapEvent(lifetime::CheckedRef<YMapEvent>))
 
 #[extendr]
 impl MapEvent {
-    fn target(&self) -> Result<MapRef, Error> {
+    fn target_ec(&self) -> Result<MapRef, Error> {
         // Cloning is shallow BranchPtr copy pointing to same data.
         self.try_map(|event| event.target().clone().into())
     }
 
-    fn keys(&self, transaction: &Transaction) -> Result<Robj, Error> {
+    fn keys_ec(&self, transaction: &Transaction) -> Result<Robj, Error> {
         self.try_map(|event| {
             transaction
                 .try_write()
@@ -146,7 +150,7 @@ impl MapEvent {
         .and_then(|r| r) // TODO(MSRV 1.89) .flatten()
     }
 
-    fn path(&self) -> Result<Robj, Error> {
+    fn path_ec(&self) -> Result<Robj, Error> {
         self.try_map(|event| event.path().extendr()).and_then(|r| r) // TODO(MSRV 1.89) .flatten()
     }
 }

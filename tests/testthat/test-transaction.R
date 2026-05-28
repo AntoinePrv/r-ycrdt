@@ -26,8 +26,8 @@ test_that("Errors when using Transaction after unlock", {
   trans <- Transaction$lock(doc, mutable = TRUE)
   trans$unlock()
 
-  expect_s3_class(trans$commit(), "extendr_error")
-  expect_s3_class(text$get_string(trans), "extendr_error")
+  expect_error(trans$commit())
+  expect_error(text$get_string(trans))
 })
 
 test_that("Transaction accepts origin", {
@@ -99,9 +99,8 @@ for (version in c("v1", "v2")) {
         doc <- Doc$new()
         doc$with_transaction(
           function(trans) {
-            expect_s3_class(
-              trans[[paste0("apply_update_", version)]](as.raw(c(0xff))),
-              "extendr_error"
+            expect_error(
+              trans[[paste0("apply_update_", version)]](as.raw(c(0xff)))
             )
           },
           mutable = TRUE
@@ -139,10 +138,10 @@ test_that("Origin can be created and compared with byte types", {
 })
 
 test_that("Origin cannot be created with invalid types", {
-  expect_s3_class(Origin$new(3.14), "extendr_error")
-  expect_s3_class(Origin$new(TRUE), "extendr_error")
-  expect_s3_class(Origin$new(NA), "extendr_error")
-  expect_s3_class(Origin$new(NULL), "extendr_error")
+  expect_error(Origin$new(3.14))
+  expect_error(Origin$new(TRUE))
+  expect_error(Origin$new(NA))
+  expect_error(Origin$new(NULL))
 })
 
 test_that("Origin can be printed", {

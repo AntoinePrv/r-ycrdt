@@ -182,12 +182,6 @@ test_that("Array observe callback transaction cannot be used after callback retu
   )
 
   # Captured objects are invalidated
-  expect_s3_class(
-    arr$len(captured_trans),
-    "extendr_error"
-  )
-  expect_s3_class(
-    captured_event$path(),
-    "extendr_error"
-  )
+  expect_error(arr$len(captured_trans))
+  expect_error(captured_event$path())
 })

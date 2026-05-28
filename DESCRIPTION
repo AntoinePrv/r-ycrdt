@@ -15,6 +15,7 @@ Depends:
     R (>= 4.2)
 Collate:
     'extendr-wrappers.R'
+    'error-wrapper.R'
     'array.R'
     'doc.R'
     'map.R'

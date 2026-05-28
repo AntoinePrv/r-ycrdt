@@ -9,29 +9,29 @@ Transaction <- new.env(parent = emptyenv())
 
 Transaction$lock <- function(doc, mutable = FALSE, origin = NULL) .Call(wrap__Transaction__lock, doc, mutable, origin)
 
-Transaction$is_mutable <- function() .Call(wrap__Transaction__is_mutable, self)
+Transaction$is_mutable_ec <- function() .Call(wrap__Transaction__is_mutable_ec, self)
 
-Transaction$origin <- function() .Call(wrap__Transaction__origin, self)
+Transaction$origin_ec <- function() .Call(wrap__Transaction__origin_ec, self)
 
-Transaction$commit <- function() .Call(wrap__Transaction__commit, self)
+Transaction$commit_ec <- function() .Call(wrap__Transaction__commit_ec, self)
 
 Transaction$unlock <- function() .Call(wrap__Transaction__unlock, self)
 
-Transaction$state_vector <- function() .Call(wrap__Transaction__state_vector, self)
+Transaction$state_vector_ec <- function() .Call(wrap__Transaction__state_vector_ec, self)
 
-Transaction$encode_diff_v1 <- function(state_vector) .Call(wrap__Transaction__encode_diff_v1, self, state_vector)
+Transaction$encode_diff_v1_ec <- function(state_vector) .Call(wrap__Transaction__encode_diff_v1_ec, self, state_vector)
 
-Transaction$encode_diff_v2 <- function(state_vector) .Call(wrap__Transaction__encode_diff_v2, self, state_vector)
+Transaction$encode_diff_v2_ec <- function(state_vector) .Call(wrap__Transaction__encode_diff_v2_ec, self, state_vector)
 
-Transaction$encode_state_as_update_v1 <- function(state_vector) .Call(wrap__Transaction__encode_state_as_update_v1, self, state_vector)
+Transaction$encode_state_as_update_v1_ec <- function(state_vector) .Call(wrap__Transaction__encode_state_as_update_v1_ec, self, state_vector)
 
-Transaction$encode_state_as_update_v2 <- function(state_vector) .Call(wrap__Transaction__encode_state_as_update_v2, self, state_vector)
+Transaction$encode_state_as_update_v2_ec <- function(state_vector) .Call(wrap__Transaction__encode_state_as_update_v2_ec, self, state_vector)
 
-Transaction$apply_update_v1 <- function(data) .Call(wrap__Transaction__apply_update_v1, self, data)
+Transaction$apply_update_v1_ec <- function(data) .Call(wrap__Transaction__apply_update_v1_ec, self, data)
 
-Transaction$apply_update_v2 <- function(data) .Call(wrap__Transaction__apply_update_v2, self, data)
+Transaction$apply_update_v2_ec <- function(data) .Call(wrap__Transaction__apply_update_v2_ec, self, data)
 
-Transaction$snapshot <- function() .Call(wrap__Transaction__snapshot, self)
+Transaction$snapshot_ec <- function() .Call(wrap__Transaction__snapshot_ec, self)
 
 #' @export
 `$.Transaction` <- function (self, name) { func <- Transaction[[name]]; environment(func) <- environment(); func }
@@ -41,7 +41,7 @@ Transaction$snapshot <- function() .Call(wrap__Transaction__snapshot, self)
 
 Origin <- new.env(parent = emptyenv())
 
-Origin$new <- function(data) .Call(wrap__Origin__new, data)
+Origin$new_ec <- function(data) .Call(wrap__Origin__new_ec, data)
 
 Origin$equal <- function(other) .Call(wrap__Origin__equal, self, other)
 
@@ -99,25 +99,25 @@ Prelim$is_recursive <- function() .Call(wrap__Prelim__is_recursive, self)
 
 ArrayRef <- new.env(parent = emptyenv())
 
-ArrayRef$len <- function(transaction) .Call(wrap__ArrayRef__len, self, transaction)
+ArrayRef$len_ec <- function(transaction) .Call(wrap__ArrayRef__len_ec, self, transaction)
 
-ArrayRef$insert <- function(transaction, index, prelim) .Call(wrap__ArrayRef__insert, self, transaction, index, prelim)
+ArrayRef$insert_ec <- function(transaction, index, prelim) .Call(wrap__ArrayRef__insert_ec, self, transaction, index, prelim)
 
-ArrayRef$insert_any <- function(transaction, index, obj) .Call(wrap__ArrayRef__insert_any, self, transaction, index, obj)
+ArrayRef$insert_any_ec <- function(transaction, index, obj) .Call(wrap__ArrayRef__insert_any_ec, self, transaction, index, obj)
 
-ArrayRef$insert_text <- function(transaction, index) .Call(wrap__ArrayRef__insert_text, self, transaction, index)
+ArrayRef$insert_text_ec <- function(transaction, index) .Call(wrap__ArrayRef__insert_text_ec, self, transaction, index)
 
-ArrayRef$insert_array <- function(transaction, index) .Call(wrap__ArrayRef__insert_array, self, transaction, index)
+ArrayRef$insert_array_ec <- function(transaction, index) .Call(wrap__ArrayRef__insert_array_ec, self, transaction, index)
 
-ArrayRef$insert_map <- function(transaction, index) .Call(wrap__ArrayRef__insert_map, self, transaction, index)
+ArrayRef$insert_map_ec <- function(transaction, index) .Call(wrap__ArrayRef__insert_map_ec, self, transaction, index)
 
-ArrayRef$get <- function(transaction, index) .Call(wrap__ArrayRef__get, self, transaction, index)
+ArrayRef$get_ec <- function(transaction, index) .Call(wrap__ArrayRef__get_ec, self, transaction, index)
 
-ArrayRef$remove <- function(transaction, index) .Call(wrap__ArrayRef__remove, self, transaction, index)
+ArrayRef$remove_ec <- function(transaction, index) .Call(wrap__ArrayRef__remove_ec, self, transaction, index)
 
-ArrayRef$observe <- function(f, key) .Call(wrap__ArrayRef__observe, self, f, key)
+ArrayRef$observe_ec <- function(f, key) .Call(wrap__ArrayRef__observe_ec, self, f, key)
 
-ArrayRef$unobserve <- function(key) .Call(wrap__ArrayRef__unobserve, self, key)
+ArrayRef$unobserve_ec <- function(key) .Call(wrap__ArrayRef__unobserve_ec, self, key)
 
 #' @export
 `$.ArrayRef` <- function (self, name) { func <- ArrayRef[[name]]; environment(func) <- environment(); func }
@@ -127,15 +127,15 @@ ArrayRef$unobserve <- function(key) .Call(wrap__ArrayRef__unobserve, self, key)
 
 ArrayEvent <- new.env(parent = emptyenv())
 
-ArrayEvent$target <- function() .Call(wrap__ArrayEvent__target, self)
+ArrayEvent$target_ec <- function() .Call(wrap__ArrayEvent__target_ec, self)
 
-ArrayEvent$delta <- function(transaction) .Call(wrap__ArrayEvent__delta, self, transaction)
+ArrayEvent$delta_ec <- function(transaction) .Call(wrap__ArrayEvent__delta_ec, self, transaction)
 
-ArrayEvent$path <- function() .Call(wrap__ArrayEvent__path, self)
+ArrayEvent$path_ec <- function() .Call(wrap__ArrayEvent__path_ec, self)
 
-ArrayEvent$inserts <- function(transaction) .Call(wrap__ArrayEvent__inserts, self, transaction)
+ArrayEvent$inserts_ec <- function(transaction) .Call(wrap__ArrayEvent__inserts_ec, self, transaction)
 
-ArrayEvent$removes <- function(transaction) .Call(wrap__ArrayEvent__removes, self, transaction)
+ArrayEvent$removes_ec <- function(transaction) .Call(wrap__ArrayEvent__removes_ec, self, transaction)
 
 #' @export
 `$.ArrayEvent` <- function (self, name) { func <- ArrayEvent[[name]]; environment(func) <- environment(); func }
@@ -145,33 +145,33 @@ ArrayEvent$removes <- function(transaction) .Call(wrap__ArrayEvent__removes, sel
 
 MapRef <- new.env(parent = emptyenv())
 
-MapRef$len <- function(transaction) .Call(wrap__MapRef__len, self, transaction)
+MapRef$len_ec <- function(transaction) .Call(wrap__MapRef__len_ec, self, transaction)
 
-MapRef$contains_key <- function(transaction, key) .Call(wrap__MapRef__contains_key, self, transaction, key)
+MapRef$contains_key_ec <- function(transaction, key) .Call(wrap__MapRef__contains_key_ec, self, transaction, key)
 
-MapRef$insert <- function(transaction, key, prelim) .Call(wrap__MapRef__insert, self, transaction, key, prelim)
+MapRef$insert_ec <- function(transaction, key, prelim) .Call(wrap__MapRef__insert_ec, self, transaction, key, prelim)
 
-MapRef$insert_any <- function(transaction, key, obj) .Call(wrap__MapRef__insert_any, self, transaction, key, obj)
+MapRef$insert_any_ec <- function(transaction, key, obj) .Call(wrap__MapRef__insert_any_ec, self, transaction, key, obj)
 
-MapRef$insert_text <- function(transaction, key) .Call(wrap__MapRef__insert_text, self, transaction, key)
+MapRef$insert_text_ec <- function(transaction, key) .Call(wrap__MapRef__insert_text_ec, self, transaction, key)
 
-MapRef$insert_array <- function(transaction, key) .Call(wrap__MapRef__insert_array, self, transaction, key)
+MapRef$insert_array_ec <- function(transaction, key) .Call(wrap__MapRef__insert_array_ec, self, transaction, key)
 
-MapRef$insert_map <- function(transaction, key) .Call(wrap__MapRef__insert_map, self, transaction, key)
+MapRef$insert_map_ec <- function(transaction, key) .Call(wrap__MapRef__insert_map_ec, self, transaction, key)
 
-MapRef$get <- function(transaction, key) .Call(wrap__MapRef__get, self, transaction, key)
+MapRef$get_ec <- function(transaction, key) .Call(wrap__MapRef__get_ec, self, transaction, key)
 
-MapRef$keys <- function(transaction) .Call(wrap__MapRef__keys, self, transaction)
+MapRef$keys_ec <- function(transaction) .Call(wrap__MapRef__keys_ec, self, transaction)
 
-MapRef$items <- function(transaction) .Call(wrap__MapRef__items, self, transaction)
+MapRef$items_ec <- function(transaction) .Call(wrap__MapRef__items_ec, self, transaction)
 
-MapRef$remove <- function(transaction, key) .Call(wrap__MapRef__remove, self, transaction, key)
+MapRef$remove_ec <- function(transaction, key) .Call(wrap__MapRef__remove_ec, self, transaction, key)
 
-MapRef$clear <- function(transaction) .Call(wrap__MapRef__clear, self, transaction)
+MapRef$clear_ec <- function(transaction) .Call(wrap__MapRef__clear_ec, self, transaction)
 
-MapRef$observe <- function(f, key) .Call(wrap__MapRef__observe, self, f, key)
+MapRef$observe_ec <- function(f, key) .Call(wrap__MapRef__observe_ec, self, f, key)
 
-MapRef$unobserve <- function(key) .Call(wrap__MapRef__unobserve, self, key)
+MapRef$unobserve_ec <- function(key) .Call(wrap__MapRef__unobserve_ec, self, key)
 
 #' @export
 `$.MapRef` <- function (self, name) { func <- MapRef[[name]]; environment(func) <- environment(); func }
@@ -181,11 +181,11 @@ MapRef$unobserve <- function(key) .Call(wrap__MapRef__unobserve, self, key)
 
 MapEvent <- new.env(parent = emptyenv())
 
-MapEvent$target <- function() .Call(wrap__MapEvent__target, self)
+MapEvent$target_ec <- function() .Call(wrap__MapEvent__target_ec, self)
 
-MapEvent$keys <- function(transaction) .Call(wrap__MapEvent__keys, self, transaction)
+MapEvent$keys_ec <- function(transaction) .Call(wrap__MapEvent__keys_ec, self, transaction)
 
-MapEvent$path <- function() .Call(wrap__MapEvent__path, self)
+MapEvent$path_ec <- function() .Call(wrap__MapEvent__path_ec, self)
 
 #' @export
 `$.MapEvent` <- function (self, name) { func <- MapEvent[[name]]; environment(func) <- environment(); func }
@@ -195,15 +195,15 @@ MapEvent$path <- function() .Call(wrap__MapEvent__path, self)
 
 SyncMessage <- new.env(parent = emptyenv())
 
-SyncMessage$decode_v1 <- function(data) .Call(wrap__SyncMessage__decode_v1, data)
+SyncMessage$decode_v1_ec <- function(data) .Call(wrap__SyncMessage__decode_v1_ec, data)
 
-SyncMessage$decode_v2 <- function(data) .Call(wrap__SyncMessage__decode_v2, data)
+SyncMessage$decode_v2_ec <- function(data) .Call(wrap__SyncMessage__decode_v2_ec, data)
 
-SyncMessage$from_sync_step1 <- function(state_vector) .Call(wrap__SyncMessage__from_sync_step1, state_vector)
+SyncMessage$from_sync_step1_ec <- function(state_vector) .Call(wrap__SyncMessage__from_sync_step1_ec, state_vector)
 
-SyncMessage$from_sync_step2 <- function(data) .Call(wrap__SyncMessage__from_sync_step2, data)
+SyncMessage$from_sync_step2_ec <- function(data) .Call(wrap__SyncMessage__from_sync_step2_ec, data)
 
-SyncMessage$from_update <- function(data) .Call(wrap__SyncMessage__from_update, data)
+SyncMessage$from_update_ec <- function(data) .Call(wrap__SyncMessage__from_update_ec, data)
 
 SyncMessage$equal <- function(other) .Call(wrap__SyncMessage__equal, self, other)
 
@@ -221,9 +221,9 @@ SyncMessage$is_sync_step2 <- function() .Call(wrap__SyncMessage__is_sync_step2, 
 
 SyncMessage$is_update <- function() .Call(wrap__SyncMessage__is_update, self)
 
-SyncMessage$state_vector <- function() .Call(wrap__SyncMessage__state_vector, self)
+SyncMessage$state_vector_ec <- function() .Call(wrap__SyncMessage__state_vector_ec, self)
 
-SyncMessage$data <- function() .Call(wrap__SyncMessage__data, self)
+SyncMessage$data_ec <- function() .Call(wrap__SyncMessage__data_ec, self)
 
 #' @export
 `$.SyncMessage` <- function (self, name) { func <- SyncMessage[[name]]; environment(func) <- environment(); func }
@@ -233,11 +233,11 @@ SyncMessage$data <- function() .Call(wrap__SyncMessage__data, self)
 
 Message <- new.env(parent = emptyenv())
 
-Message$decode_v1 <- function(data) .Call(wrap__Message__decode_v1, data)
+Message$decode_v1_ec <- function(data) .Call(wrap__Message__decode_v1_ec, data)
 
-Message$decode_v2 <- function(data) .Call(wrap__Message__decode_v2, data)
+Message$decode_v2_ec <- function(data) .Call(wrap__Message__decode_v2_ec, data)
 
-Message$new <- function(obj) .Call(wrap__Message__new, obj)
+Message$new_ec <- function(obj) .Call(wrap__Message__new_ec, obj)
 
 Message$inner <- function() .Call(wrap__Message__inner, self)
 
@@ -265,9 +265,9 @@ Unsupported$new <- function() .Call(wrap__Unsupported__new)
 
 StateVector <- new.env(parent = emptyenv())
 
-StateVector$decode_v1 <- function(data) .Call(wrap__StateVector__decode_v1, data)
+StateVector$decode_v1_ec <- function(data) .Call(wrap__StateVector__decode_v1_ec, data)
 
-StateVector$decode_v2 <- function(data) .Call(wrap__StateVector__decode_v2, data)
+StateVector$decode_v2_ec <- function(data) .Call(wrap__StateVector__decode_v2_ec, data)
 
 StateVector$is_empty <- function() .Call(wrap__StateVector__is_empty, self)
 
@@ -299,9 +299,9 @@ StateVector$encode_v2 <- function() .Call(wrap__StateVector__encode_v2, self)
 
 DeleteSet <- new.env(parent = emptyenv())
 
-DeleteSet$decode_v1 <- function(data) .Call(wrap__DeleteSet__decode_v1, data)
+DeleteSet$decode_v1_ec <- function(data) .Call(wrap__DeleteSet__decode_v1_ec, data)
 
-DeleteSet$decode_v2 <- function(data) .Call(wrap__DeleteSet__decode_v2, data)
+DeleteSet$decode_v2_ec <- function(data) .Call(wrap__DeleteSet__decode_v2_ec, data)
 
 DeleteSet$new <- function() .Call(wrap__DeleteSet__new)
 
@@ -309,7 +309,7 @@ DeleteSet$is_empty <- function() .Call(wrap__DeleteSet__is_empty, self)
 
 DeleteSet$len <- function() .Call(wrap__DeleteSet__len, self)
 
-DeleteSet$is_deleted <- function(id) .Call(wrap__DeleteSet__is_deleted, self, id)
+DeleteSet$is_deleted_ec <- function(id) .Call(wrap__DeleteSet__is_deleted_ec, self, id)
 
 DeleteSet$equal <- function(other) .Call(wrap__DeleteSet__equal, self, other)
 
@@ -333,9 +333,9 @@ Snapshot <- new.env(parent = emptyenv())
 
 Snapshot$new <- function(state_map, delete_set) .Call(wrap__Snapshot__new, state_map, delete_set)
 
-Snapshot$decode_v1 <- function(data) .Call(wrap__Snapshot__decode_v1, data)
+Snapshot$decode_v1_ec <- function(data) .Call(wrap__Snapshot__decode_v1_ec, data)
 
-Snapshot$decode_v2 <- function(data) .Call(wrap__Snapshot__decode_v2, data)
+Snapshot$decode_v2_ec <- function(data) .Call(wrap__Snapshot__decode_v2_ec, data)
 
 Snapshot$encode_v1 <- function() .Call(wrap__Snapshot__encode_v1, self)
 
@@ -353,19 +353,19 @@ Snapshot$not_equal <- function(other) .Call(wrap__Snapshot__not_equal, self, oth
 
 TextRef <- new.env(parent = emptyenv())
 
-TextRef$len <- function(transaction) .Call(wrap__TextRef__len, self, transaction)
+TextRef$len_ec <- function(transaction) .Call(wrap__TextRef__len_ec, self, transaction)
 
-TextRef$insert <- function(transaction, index, chunk) .Call(wrap__TextRef__insert, self, transaction, index, chunk)
+TextRef$insert_ec <- function(transaction, index, chunk) .Call(wrap__TextRef__insert_ec, self, transaction, index, chunk)
 
-TextRef$push <- function(transaction, chunk) .Call(wrap__TextRef__push, self, transaction, chunk)
+TextRef$push_ec <- function(transaction, chunk) .Call(wrap__TextRef__push_ec, self, transaction, chunk)
 
-TextRef$remove_range <- function(transaction, index, len) .Call(wrap__TextRef__remove_range, self, transaction, index, len)
+TextRef$remove_range_ec <- function(transaction, index, len) .Call(wrap__TextRef__remove_range_ec, self, transaction, index, len)
 
-TextRef$get_string <- function(transaction) .Call(wrap__TextRef__get_string, self, transaction)
+TextRef$get_string_ec <- function(transaction) .Call(wrap__TextRef__get_string_ec, self, transaction)
 
-TextRef$observe <- function(f, key) .Call(wrap__TextRef__observe, self, f, key)
+TextRef$observe_ec <- function(f, key) .Call(wrap__TextRef__observe_ec, self, f, key)
 
-TextRef$unobserve <- function(key) .Call(wrap__TextRef__unobserve, self, key)
+TextRef$unobserve_ec <- function(key) .Call(wrap__TextRef__unobserve_ec, self, key)
 
 #' @export
 `$.TextRef` <- function (self, name) { func <- TextRef[[name]]; environment(func) <- environment(); func }
@@ -375,11 +375,11 @@ TextRef$unobserve <- function(key) .Call(wrap__TextRef__unobserve, self, key)
 
 TextEvent <- new.env(parent = emptyenv())
 
-TextEvent$target <- function() .Call(wrap__TextEvent__target, self)
+TextEvent$target_ec <- function() .Call(wrap__TextEvent__target_ec, self)
 
-TextEvent$delta <- function(transaction) .Call(wrap__TextEvent__delta, self, transaction)
+TextEvent$delta_ec <- function(transaction) .Call(wrap__TextEvent__delta_ec, self, transaction)
 
-TextEvent$path <- function() .Call(wrap__TextEvent__path, self)
+TextEvent$path_ec <- function() .Call(wrap__TextEvent__path_ec, self)
 
 #' @export
 `$.TextEvent` <- function (self, name) { func <- TextEvent[[name]]; environment(func) <- environment(); func }
@@ -389,9 +389,9 @@ TextEvent$path <- function() .Call(wrap__TextEvent__path, self)
 
 Update <- new.env(parent = emptyenv())
 
-Update$decode_v1 <- function(data) .Call(wrap__Update__decode_v1, data)
+Update$decode_v1_ec <- function(data) .Call(wrap__Update__decode_v1_ec, data)
 
-Update$decode_v2 <- function(data) .Call(wrap__Update__decode_v2, data)
+Update$decode_v2_ec <- function(data) .Call(wrap__Update__decode_v2_ec, data)
 
 Update$new <- function() .Call(wrap__Update__new)
 
@@ -431,9 +431,9 @@ Doc$get_or_insert_array <- function(name) .Call(wrap__Doc__get_or_insert_array, 
 
 Doc$to_string <- function() .Call(wrap__Doc__to_string, self)
 
-Doc$observe_transaction_cleanup <- function(f, key) .Call(wrap__Doc__observe_transaction_cleanup, self, f, key)
+Doc$observe_transaction_cleanup_ec <- function(f, key) .Call(wrap__Doc__observe_transaction_cleanup_ec, self, f, key)
 
-Doc$unobserve_transaction_cleanup <- function(key) .Call(wrap__Doc__unobserve_transaction_cleanup, self, key)
+Doc$unobserve_transaction_cleanup_ec <- function(key) .Call(wrap__Doc__unobserve_transaction_cleanup_ec, self, key)
 
 #' @export
 `$.Doc` <- function (self, name) { func <- Doc[[name]]; environment(func) <- environment(); func }
@@ -443,11 +443,11 @@ Doc$unobserve_transaction_cleanup <- function(key) .Call(wrap__Doc__unobserve_tr
 
 TransactionCleanupEvent <- new.env(parent = emptyenv())
 
-TransactionCleanupEvent$before_state <- function() .Call(wrap__TransactionCleanupEvent__before_state, self)
+TransactionCleanupEvent$before_state_ec <- function() .Call(wrap__TransactionCleanupEvent__before_state_ec, self)
 
-TransactionCleanupEvent$after_state <- function() .Call(wrap__TransactionCleanupEvent__after_state, self)
+TransactionCleanupEvent$after_state_ec <- function() .Call(wrap__TransactionCleanupEvent__after_state_ec, self)
 
-TransactionCleanupEvent$delete_set <- function() .Call(wrap__TransactionCleanupEvent__delete_set, self)
+TransactionCleanupEvent$delete_set_ec <- function() .Call(wrap__TransactionCleanupEvent__delete_set_ec, self)
 
 #' @export
 `$.TransactionCleanupEvent` <- function (self, name) { func <- TransactionCleanupEvent[[name]]; environment(func) <- environment(); func }

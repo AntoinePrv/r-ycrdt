@@ -25,10 +25,7 @@ for (version in c("v1", "v2")) {
       test_that(
         paste("StateVector decode", version, "errors on invalid data"),
         {
-          expect_s3_class(
-            StateVector[[decode]](as.raw(c(0xff))),
-            "extendr_error"
-          )
+          expect_error(StateVector[[decode]](as.raw(c(0xff))))
         }
       )
     },
@@ -90,10 +87,7 @@ for (version in c("v1", "v2")) {
       test_that(
         paste("DeleteSet decode", version, "errors on invalid data"),
         {
-          expect_s3_class(
-            DeleteSet[[decode]](as.raw(c(0xff))),
-            "extendr_error"
-          )
+          expect_error(DeleteSet[[decode]](as.raw(c(0xff))))
         }
       )
     },
@@ -173,10 +167,7 @@ for (version in c("v1", "v2")) {
       test_that(
         paste("Snapshot decode", version, "errors on invalid data"),
         {
-          expect_s3_class(
-            Snapshot[[decode]](as.raw(c(0xff))),
-            "extendr_error"
-          )
+          expect_error(Snapshot[[decode]](as.raw(c(0xff))))
         }
       )
     },

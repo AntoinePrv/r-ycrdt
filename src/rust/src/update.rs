@@ -13,11 +13,11 @@ utils::extendr_struct!(
 
 #[extendr]
 impl Update {
-    pub fn decode_v1(data: &[u8]) -> Result<Self, Error> {
+    pub fn decode_v1_ec(data: &[u8]) -> Result<Self, Error> {
         Ok(Self(yrs::Update::decode_v1(data).extendr()?))
     }
 
-    pub fn decode_v2(data: &[u8]) -> Result<Self, Error> {
+    pub fn decode_v2_ec(data: &[u8]) -> Result<Self, Error> {
         Ok(Self(yrs::Update::decode_v2(data).extendr()?))
     }
 

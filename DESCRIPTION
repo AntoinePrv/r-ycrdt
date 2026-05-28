@@ -1,6 +1,6 @@
 Package: yr
 Title: Y-CRDT Bindings to R
-Version: 0.0.0.9000
+Version: 0.2
 Authors@R:
     person("Antoine", "Prouvost", , "AntoinePrv@users.noreply.github.com", role = c("aut", "cre"))
 Description: Provides R bindings to y-crdt, a Rust implementation of the

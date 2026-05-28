@@ -30,9 +30,8 @@ for (version in c("v1", "v2")) {
   local(
     {
       test_that(paste("Update decode", version, "errors on invalid data"), {
-        expect_s3_class(
-          Update[[paste0("decode_", version)]](as.raw(c(0xff))),
-          "extendr_error"
+        expect_error(
+          Update[[paste0("decode_", version)]](as.raw(c(0xff)))
         )
       })
     },

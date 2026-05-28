@@ -1,8 +1,20 @@
-#' @include extendr-wrappers.R
+#' @include extendr-wrappers.R error-wrapper.R
 NULL
 
 #' @export Doc
 NULL
+
+#' @export
+`$.Doc` <- make_dispatcher(Doc)
+
+#' @export
+`[[.Doc` <- `$.Doc`
+
+#' @export
+`$.TransactionCleanupEvent` <- make_dispatcher(TransactionCleanupEvent)
+
+#' @export
+`[[.TransactionCleanupEvent` <- `$.TransactionCleanupEvent`
 
 #' @export
 print.Doc <- function(self, ...) {

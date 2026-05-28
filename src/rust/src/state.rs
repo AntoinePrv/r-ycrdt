@@ -7,11 +7,11 @@ utils::extendr_struct!(#[extendr] pub StateVector(yrs::StateVector));
 
 #[extendr]
 impl StateVector {
-    fn decode_v1(data: &[u8]) -> Result<Self, Error> {
+    fn decode_v1_ec(data: &[u8]) -> Result<Self, Error> {
         Ok(Self(yrs::StateVector::decode_v1(data).extendr()?))
     }
 
-    fn decode_v2(data: &[u8]) -> Result<Self, Error> {
+    fn decode_v2_ec(data: &[u8]) -> Result<Self, Error> {
         Ok(Self(yrs::StateVector::decode_v2(data).extendr()?))
     }
 
@@ -64,11 +64,11 @@ utils::extendr_struct!(#[extendr] pub DeleteSet(yrs::DeleteSet));
 
 #[extendr]
 impl DeleteSet {
-    fn decode_v1(data: &[u8]) -> Result<Self, Error> {
+    fn decode_v1_ec(data: &[u8]) -> Result<Self, Error> {
         yrs::DeleteSet::decode_v1(data).extendr().map(Self)
     }
 
-    fn decode_v2(data: &[u8]) -> Result<Self, Error> {
+    fn decode_v2_ec(data: &[u8]) -> Result<Self, Error> {
         yrs::DeleteSet::decode_v2(data).extendr().map(Self)
     }
 
@@ -84,7 +84,7 @@ impl DeleteSet {
         self.0.len()
     }
 
-    fn is_deleted(&self, id: Robj) -> Result<bool, Error> {
+    fn is_deleted_ec(&self, id: Robj) -> Result<bool, Error> {
         let id = yrs::block::ID::from_extendr(id)?;
         Ok(self.0.is_deleted(&id))
     }
@@ -122,11 +122,11 @@ impl Snapshot {
         yrs::Snapshot::new(state_map.0.clone(), delete_set.0.clone()).into()
     }
 
-    fn decode_v1(data: &[u8]) -> Result<Self, Error> {
+    fn decode_v1_ec(data: &[u8]) -> Result<Self, Error> {
         yrs::Snapshot::decode_v1(data).extendr().map(Self)
     }
 
-    fn decode_v2(data: &[u8]) -> Result<Self, Error> {
+    fn decode_v2_ec(data: &[u8]) -> Result<Self, Error> {
         yrs::Snapshot::decode_v2(data).extendr().map(Self)
     }
 

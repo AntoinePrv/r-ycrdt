@@ -7,7 +7,7 @@ test_that("SyncMessage construction, step detection, and accessors", {
   expect_false(msg1$is_sync_step2())
   expect_false(msg1$is_update())
   expect_true(inherits(msg1$state_vector(), "StateVector"))
-  expect_s3_class(msg1$data(), "extendr_error")
+  expect_error(msg1$data())
 
   raw_data <- as.raw(c(0x01, 0x02, 0x03))
 
@@ -17,7 +17,7 @@ test_that("SyncMessage construction, step detection, and accessors", {
   expect_true(msg2$is_sync_step2())
   expect_false(msg2$is_update())
   expect_equal(msg2$data(), raw_data)
-  expect_s3_class(msg2$state_vector(), "extendr_error")
+  expect_error(msg2$state_vector())
 
   msg3 <- SyncMessage$from_update(raw_data)
   expect_equal(msg3$step(), "update")
@@ -25,7 +25,7 @@ test_that("SyncMessage construction, step detection, and accessors", {
   expect_false(msg3$is_sync_step2())
   expect_true(msg3$is_update())
   expect_equal(msg3$data(), raw_data)
-  expect_s3_class(msg3$state_vector(), "extendr_error")
+  expect_error(msg3$state_vector())
 })
 
 test_that("SyncMessage two-peer sync via SyncStep1/SyncStep2", {
@@ -115,8 +115,8 @@ test_that("SyncMessage equality", {
 })
 
 test_that("SyncMessage decode errors on invalid data", {
-  expect_s3_class(SyncMessage$decode_v1(as.raw(c(0xff))), "extendr_error")
-  expect_s3_class(SyncMessage$decode_v2(as.raw(c(0xff))), "extendr_error")
+  expect_error(SyncMessage$decode_v1(as.raw(c(0xff))))
+  expect_error(SyncMessage$decode_v2(as.raw(c(0xff))))
 })
 
 test_that("Message construction from SyncMessage and inner", {
@@ -128,9 +128,9 @@ test_that("Message construction from SyncMessage and inner", {
 })
 
 test_that("Message$new errors on unsupported input", {
-  expect_s3_class(Message$new(42L), "extendr_error")
-  expect_s3_class(Message$new("not a message"), "extendr_error")
-  expect_s3_class(Message$new(list(1, 2)), "extendr_error")
+  expect_error(Message$new(42L))
+  expect_error(Message$new("not a message"))
+  expect_error(Message$new(list(1, 2)))
 })
 
 for (version in c("v1", "v2")) {

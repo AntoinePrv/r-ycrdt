@@ -11,25 +11,25 @@ utils::extendr_struct!(#[extendr] pub SyncMessage(YSyncMessage));
 
 #[extendr]
 impl SyncMessage {
-    fn decode_v1(data: &[u8]) -> Result<Self, Error> {
+    fn decode_v1_ec(data: &[u8]) -> Result<Self, Error> {
         YSyncMessage::decode_v1(data).extendr().map(From::from)
     }
 
-    fn decode_v2(data: &[u8]) -> Result<Self, Error> {
+    fn decode_v2_ec(data: &[u8]) -> Result<Self, Error> {
         YSyncMessage::decode_v2(data).extendr().map(From::from)
     }
 
-    fn from_sync_step1(state_vector: &StateVector) -> Result<Self, Error> {
+    fn from_sync_step1_ec(state_vector: &StateVector) -> Result<Self, Error> {
         Ok(Self::from(YSyncMessage::SyncStep1(
             state_vector.as_ref().clone(),
         )))
     }
 
-    fn from_sync_step2(data: &[u8]) -> Result<Self, Error> {
+    fn from_sync_step2_ec(data: &[u8]) -> Result<Self, Error> {
         Ok(Self::from(YSyncMessage::SyncStep2(data.to_vec())))
     }
 
-    fn from_update(data: &[u8]) -> Result<Self, Error> {
+    fn from_update_ec(data: &[u8]) -> Result<Self, Error> {
         Ok(Self::from(YSyncMessage::Update(data.to_vec())))
     }
 
@@ -69,7 +69,7 @@ impl SyncMessage {
         matches!(self.as_ref(), YSyncMessage::Update(_))
     }
 
-    fn state_vector(&self) -> Result<StateVector, Error> {
+    fn state_vector_ec(&self) -> Result<StateVector, Error> {
         match self.as_ref() {
             YSyncMessage::SyncStep1(sv) => Ok(StateVector::from(sv.clone())),
             _ => Err(Error::Other(format!(
@@ -79,7 +79,7 @@ impl SyncMessage {
         }
     }
 
-    fn data(&self) -> Result<Raw, Error> {
+    fn data_ec(&self) -> Result<Raw, Error> {
         match self.as_ref() {
             YSyncMessage::SyncStep2(data) | YSyncMessage::Update(data) => Ok(Raw::from_bytes(data)),
             _ => Err(Error::Other(format!(
@@ -115,19 +115,19 @@ impl Message {
 
 #[extendr]
 impl Message {
-    fn decode_v1(data: &[u8]) -> Result<Self, Error> {
+    fn decode_v1_ec(data: &[u8]) -> Result<Self, Error> {
         YMessage::decode_v1(data)
             .map(Self::from_ymessage)
             .map_err(|err| Error::Other(err.to_string()))
     }
 
-    fn decode_v2(data: &[u8]) -> Result<Self, Error> {
+    fn decode_v2_ec(data: &[u8]) -> Result<Self, Error> {
         YMessage::decode_v2(data)
             .map(Self::from_ymessage)
             .map_err(|err| Error::Other(err.to_string()))
     }
 
-    fn new(obj: Robj) -> Result<Self, Error> {
+    fn new_ec(obj: Robj) -> Result<Self, Error> {
         if let Ok(m) = TryInto::<ExternalPtr<SyncMessage>>::try_into(obj.clone()) {
             Ok(Self(m.into_robj()))
         } else {

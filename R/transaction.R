@@ -1,4 +1,4 @@
-#' @include extendr-wrappers.R
+#' @include extendr-wrappers.R error-wrapper.R
 NULL
 
 #' @export Transaction
@@ -6,6 +6,20 @@ NULL
 
 #' @export Origin
 NULL
+
+#' @export
+`$.Transaction` <- make_dispatcher(Transaction)
+
+#' @export
+`[[.Transaction` <- `$.Transaction`
+
+#' @export
+`$.Origin` <- make_dispatcher(Origin)
+
+#' @export
+`[[.Origin` <- `$.Origin`
+
+install_checked_static(Origin, "new")
 
 #' @export
 print.Origin <- function(self, ...) {

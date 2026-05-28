@@ -235,15 +235,15 @@ impl Transaction {
         ))
     }
 
-    pub fn is_mutable(&self) -> Result<bool, Error> {
+    pub fn is_mutable_ec(&self) -> Result<bool, Error> {
         ExtendrTransaction::is_mutable(self)
     }
 
-    pub fn origin(&self) -> Result<Robj, Error> {
+    pub fn origin_ec(&self) -> Result<Robj, Error> {
         ExtendrTransaction::origin(self)
     }
 
-    pub fn commit(&mut self) -> Result<(), Error> {
+    pub fn commit_ec(&mut self) -> Result<(), Error> {
         ExtendrTransaction::commit(self)
     }
 
@@ -254,35 +254,41 @@ impl Transaction {
         }
     }
 
-    pub fn state_vector(&self) -> Result<StateVector, Error> {
+    pub fn state_vector_ec(&self) -> Result<StateVector, Error> {
         ExtendrTransaction::state_vector(self)
     }
 
-    pub fn encode_diff_v1(&self, state_vector: &StateVector) -> Result<Vec<u8>, Error> {
+    pub fn encode_diff_v1_ec(&self, state_vector: &StateVector) -> Result<Vec<u8>, Error> {
         ExtendrTransaction::encode_diff_v1(self, state_vector)
     }
 
-    pub fn encode_diff_v2(&self, state_vector: &StateVector) -> Result<Vec<u8>, Error> {
+    pub fn encode_diff_v2_ec(&self, state_vector: &StateVector) -> Result<Vec<u8>, Error> {
         ExtendrTransaction::encode_diff_v2(self, state_vector)
     }
 
-    pub fn encode_state_as_update_v1(&self, state_vector: &StateVector) -> Result<Vec<u8>, Error> {
+    pub fn encode_state_as_update_v1_ec(
+        &self,
+        state_vector: &StateVector,
+    ) -> Result<Vec<u8>, Error> {
         ExtendrTransaction::encode_state_as_update_v1(self, state_vector)
     }
 
-    pub fn encode_state_as_update_v2(&self, state_vector: &StateVector) -> Result<Vec<u8>, Error> {
+    pub fn encode_state_as_update_v2_ec(
+        &self,
+        state_vector: &StateVector,
+    ) -> Result<Vec<u8>, Error> {
         ExtendrTransaction::encode_state_as_update_v2(self, state_vector)
     }
 
-    pub fn apply_update_v1(&mut self, data: &[u8]) -> Result<(), Error> {
+    pub fn apply_update_v1_ec(&mut self, data: &[u8]) -> Result<(), Error> {
         ExtendrTransaction::apply_update_v1(self, data)
     }
 
-    pub fn apply_update_v2(&mut self, data: &[u8]) -> Result<(), Error> {
+    pub fn apply_update_v2_ec(&mut self, data: &[u8]) -> Result<(), Error> {
         ExtendrTransaction::apply_update_v2(self, data)
     }
 
-    pub fn snapshot(&self) -> Result<Snapshot, Error> {
+    pub fn snapshot_ec(&self) -> Result<Snapshot, Error> {
         ExtendrTransaction::snapshot(self)
     }
 }
@@ -291,7 +297,7 @@ utils::extendr_struct!(#[extendr] pub Origin(yrs::Origin));
 
 #[extendr]
 impl Origin {
-    pub fn new(data: &Robj) -> Result<Self, Error> {
+    pub fn new_ec(data: &Robj) -> Result<Self, Error> {
         if let Ok(origin) = TryInto::<&Origin>::try_into(data) {
             Ok(Self(origin.0.clone()))
         } else if let Ok(n) = TryInto::<i64>::try_into(data) {
@@ -354,6 +360,12 @@ impl Origin {
                 ]
             })
             .collect()
+    }
+}
+
+impl Origin {
+    pub(crate) fn new(data: &Robj) -> Result<Self, Error> {
+        Self::new_ec(data)
     }
 }
 

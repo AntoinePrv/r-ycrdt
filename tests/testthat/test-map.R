@@ -265,12 +265,6 @@ test_that("Map observe callback transaction cannot be used after callback return
   )
 
   # Captured objects are invalidated
-  expect_s3_class(
-    map$len(captured_trans),
-    "extendr_error"
-  )
-  expect_s3_class(
-    captured_event$path(),
-    "extendr_error"
-  )
+  expect_error(map$len(captured_trans))
+  expect_error(captured_event$path())
 })
